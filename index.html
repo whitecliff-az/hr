@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рекрутмент 2026 | Интерактивный дашборд</title>
+<style>
+:root{
+  --dark:#2E5FA3; --mid:#5B8DEF; --accent:#5B8DEF;
+  --bg:#EEF3FC; --card:#FFFFFF;
+  --grn:#3FAE7A; --grn-bg:#E7F8EF;
+  --blu:#4A7FDE; --blu-bg:#E8F0FE;
+  --amb:#D99A2B; --amb-bg:#FDF3E1;
+  --gry:#8A97B5; --gry-bg:#EFF2F9;
+  --red:#E2707A; --red-bg:#FCEBED;
+  --pur:#9B8CE0; --pur-bg:#F0EDFB;
+  --txt:#2E3B58; --muted:#8DA0C4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;position:relative}
+
+/* soft drifting pastel blobs across the whole page */
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  background:
+    radial-gradient(420px 420px at 8% 12%, rgba(91,141,239,.14) 0%, transparent 70%),
+    radial-gradient(500px 500px at 92% 28%, rgba(155,140,224,.13) 0%, transparent 70%),
+    radial-gradient(460px 460px at 20% 90%, rgba(63,174,122,.10) 0%, transparent 70%),
+    radial-gradient(400px 400px at 80% 95%, rgba(217,154,43,.09) 0%, transparent 70%);
+  animation:blobDrift 16s ease-in-out infinite alternate}
+@keyframes blobDrift{
+  0%{background-position:0 0,0 0,0 0,0 0}
+  100%{background-position:30px -20px,-25px 20px,20px -15px,-15px 15px}
+}
+
+#scrollbar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#5B8DEF,#8FB4F5);width:0%;z-index:1000;transition:width .1s}
+
+/* HERO */
+.hero{position:relative;min-height:340px;background:linear-gradient(135deg,#3B6FC4 0%,#5B8DEF 50%,#7FA8E8 100%);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;padding:60px 24px 90px}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 110%, rgba(255,255,255,.18) 0%, transparent 55%),
+             radial-gradient(ellipse at 85% -10%, rgba(255,255,255,.22) 0%, transparent 50%);
+  animation:heroGlow 8s ease-in-out infinite alternate}
+@keyframes heroGlow{0%{opacity:.6}100%{opacity:1}}
+.hero::after{content:'';position:absolute;top:50%;left:50%;width:640px;height:640px;margin:-320px 0 0 -320px;
+  background:conic-gradient(from 0deg, rgba(255,255,255,.10), transparent 25%, transparent 50%, rgba(255,255,255,.10) 75%, rgba(255,255,255,.10));
+  border-radius:50%;animation:haloSpin 24s linear infinite;pointer-events:none}
+@keyframes haloSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:900px}
+.hero-badge{display:inline-block;padding:6px 18px;border-radius:30px;background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.35);font-size:12px;color:#fff;letter-spacing:.15em;text-transform:uppercase;
+  margin-bottom:20px;backdrop-filter:blur(10px);animation:fadeUp .8s ease both, floatY 3.6s ease-in-out infinite 1s}
+.hero h1{font-size:clamp(28px,5vw,46px);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15;margin-bottom:14px;animation:fadeUp .8s .15s ease both}
+.hero p{font-size:15px;color:#EAF1FF;animation:fadeUp .8s .3s ease both}
+.hero-stats{display:flex;gap:14px;margin-top:36px;flex-wrap:wrap;justify-content:center;animation:fadeUp .8s .45s ease both}
+.hstat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:16px 28px;backdrop-filter:blur(12px);transition:transform .3s,background .3s;cursor:default;animation:floatY 4.2s ease-in-out infinite}
+.hstat:nth-child(2){animation-delay:.3s}.hstat:nth-child(3){animation-delay:.6s}.hstat:nth-child(4){animation-delay:.9s}
+.hstat:hover{transform:translateY(-6px) scale(1.03);background:rgba(255,255,255,.22)}
+.hstat-v{font-size:26px;font-weight:800;color:#fff}
+.hstat-l{font-size:10px;color:#EAF1FF;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+
+.wave{position:absolute;bottom:-1px;left:0;width:100%;z-index:3;overflow:hidden}
+.wave svg{display:block;width:100%;height:90px;overflow:visible}
+.ow{transform-origin:center;will-change:transform}
+.ow1{animation:owMove1 7s ease-in-out infinite alternate}
+.ow2{animation:owMove2 9s ease-in-out infinite alternate}
+@keyframes owMove1{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
+@keyframes owMove2{from{transform:translateX(20px)}to{transform:translateX(-28px)}}
+
+/* NAV / VIEW SWITCH */
+.nav{position:sticky;top:0;z-index:900;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid #E0E8F4;display:flex;justify-content:center;gap:10px;padding:12px 16px;flex-wrap:wrap}
+.vtab{padding:10px 30px;border-radius:12px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;
+  border:1.5px solid #E0E8F4;background:#fff;transition:all .25s;display:flex;align-items:center;gap:9px}
+.vtab:hover{border-color:var(--accent);color:var(--dark)}
+.vtab.on{background:var(--dark);color:#fff;border-color:var(--dark);box-shadow:0 8px 20px rgba(46,95,163,.3);animation:tabPulse 2.4s ease-in-out infinite}
+@keyframes tabPulse{0%,100%{box-shadow:0 8px 20px rgba(46,95,163,.28)}50%{box-shadow:0 8px 28px rgba(91,141,239,.45)}}
+.vtab .cnt{background:rgba(255,255,255,.2);padding:2px 9px;border-radius:9px;font-size:11px}
+.vtab:not(.on) .cnt{background:#EEF2F8;color:var(--muted)}
+
+.wrap{max-width:1320px;margin:0 auto;padding:24px 24px 60px}
+.section-head{display:flex;align-items:center;gap:14px;margin:44px 0 22px;flex-wrap:wrap}
+.sh-num{width:38px;height:38px;border-radius:12px;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;box-shadow:0 6px 18px rgba(46,95,163,.25)}
+.sh-title{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.sh-sub{font-size:12.5px;color:var(--muted);margin-left:2px}
+.sh-line{flex:1;height:2px;background:linear-gradient(90deg,#C8D4EC,transparent)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.kpi{background:var(--card);border-radius:18px;padding:24px;border:1px solid #E4EAF6;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;opacity:0;transform:translateY(30px)}
+.kpi.visible{opacity:1;transform:translateY(0);transition:opacity .6s,transform .6s,box-shadow .3s}
+.kpi:hover{transform:translateY(-6px)!important;box-shadow:0 20px 40px rgba(46,95,163,.12)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background-size:200% 100%;animation:shimmer 3s linear infinite}
+.kpi.k1::before{background-image:linear-gradient(90deg,#5B8DEF,#AFC9F7,#5B8DEF)}
+.kpi.k2::before{background-image:linear-gradient(90deg,#3FAE7A,#A6E6C6,#3FAE7A)}
+.kpi.k3::before{background-image:linear-gradient(90deg,#9B8CE0,#D3C9F7,#9B8CE0)}
+.kpi.k4::before{background-image:linear-gradient(90deg,#D99A2B,#F5D28C,#D99A2B)}
+.kpi.k5::before{background-image:linear-gradient(90deg,#E2707A,#F5BEC3,#E2707A)}
+@keyframes shimmer{0%{background-position:0% 0}100%{background-position:-200% 0}}
+.kpi-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.kpi-value{font-size:34px;font-weight:800;letter-spacing:-.02em;color:var(--txt)}
+.kpi-sub{font-size:12px;color:#9AAAC8;margin-top:8px}
+
+/* CHARTS */
+.charts{display:grid;grid-template-columns:340px 1fr;gap:16px;margin-top:16px}
+.charts2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:900px){.charts,.charts2{grid-template-columns:1fr}}
+.chart-card{background:var(--card);border-radius:18px;padding:24px;border:1px solid #E4EAF6;opacity:0;transform:translateY(30px);transition:box-shadow .3s}
+.chart-card:hover{box-shadow:0 16px 34px rgba(46,95,163,.1)}
+.chart-card.visible{opacity:1;transform:translateY(0);transition:.6s}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:18px}
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.donut{position:relative;width:160px;height:160px;flex-shrink:0}
+.donut::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(91,141,239,.35);animation:ringSpin 18s linear infinite}
+.donut svg{transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:22;stroke-linecap:round;transition:stroke-dasharray 1.5s cubic-bezier(.22,1,.36,1)}
+@keyframes ringSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-center b{font-size:28px;font-weight:800;color:var(--txt)}
+.donut-center span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.donut-legend{display:flex;flex-direction:column;gap:10px}
+.dl-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.dl-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+.dl-n{margin-left:auto;font-weight:700;padding-left:14px}
+
+/* month bar chart */
+.mchart{display:flex;align-items:flex-end;gap:10px;height:180px;padding-top:10px}
+.mcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.mbar{width:100%;max-width:52px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#8FB4F5,#4A7FDE);
+  height:0;transition:height 1.2s cubic-bezier(.22,1,.36,1);position:relative;min-height:2px}
+.mbar b{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--dark)}
+.mlabel{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+
+/* horizontal bars */
+.bud-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:12px}
+.bud-name{width:170px;flex-shrink:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bud-track{flex:1;height:22px;background:#EEF2F8;border-radius:6px;overflow:hidden;position:relative}
+.bud-fill{height:100%;border-radius:6px;width:0;transition:width 1.4s cubic-bezier(.22,1,.36,1);background:linear-gradient(90deg,#4A7FDE,#8FB4F5);display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+.bud-fill.alt{background:linear-gradient(90deg,#9B8CE0,#C9BFF2)}
+.bud-fill.over{background:linear-gradient(90deg,#E2707A,#F2A0A8)}
+.bud-fill span{font-size:10px;font-weight:700;color:#fff;white-space:nowrap}
+
+/* FILTERS & TABLES */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.ftab{padding:8px 18px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;border:1.5px solid #E0E8F4;color:var(--muted);transition:all .2s}
+.ftab:hover{border-color:var(--accent);color:var(--dark)}
+.ftab.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.ftab .cnt{background:rgba(255,255,255,.2);padding:1px 8px;border-radius:8px;font-size:11px;margin-left:6px}
+.ftab:not(.on) .cnt{background:#EEF2F8}
+.search-box{margin-left:auto;padding:9px 16px;border-radius:12px;border:1.5px solid #E0E8F4;font-size:13px;min-width:220px;outline:none;color:var(--txt)}
+.search-box:focus{border-color:var(--accent)}
+.tbl-card{background:var(--card);border-radius:18px;border:1px solid #E4EAF6;overflow:hidden;opacity:0;transform:translateY(30px)}
+.tbl-card.visible{opacity:1;transform:translateY(0);transition:.6s}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--dark);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:12px 14px;text-align:left;white-space:nowrap}
+tbody td{padding:11px 14px;font-size:13px;border-bottom:1px solid #F0F4FA;vertical-align:middle}
+tbody tr{transition:background .15s;cursor:pointer}
+tbody tr:hover{background:#F4F8FE}
+.cand{font-weight:700}
+.vac-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-emp{background:var(--grn-bg);color:var(--grn)}
+.b-jo{background:var(--blu-bg);color:var(--blu)}
+.b-leave{background:var(--red-bg);color:var(--red)}
+.b-hold{background:var(--gry-bg);color:var(--gry)}
+.b-sec{background:var(--amb-bg);color:var(--amb)}
+.b-hire{background:var(--pur-bg);color:var(--pur)}
+.b-search{background:var(--blu-bg);color:var(--blu);animation:badgePulse 2.2s ease-in-out infinite}
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(74,127,222,.35)}50%{box-shadow:0 0 0 4px rgba(74,127,222,0)}}
+.num{font-weight:700;text-align:center}
+.pri{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.p1{background:var(--red)}.p2{background:#D99A2B}.p3{background:var(--gry)}
+.legend{display:flex;gap:20px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:7px}
+
+/* onboarding dots (same visual language as d-done/d-act/d-wait) */
+.onb{display:flex;gap:5px;align-items:center}
+.dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;border:2px solid transparent;transition:transform .2s;flex-shrink:0}
+tbody tr:hover .dot{transform:scale(1.1)}
+.d-done{background:var(--grn-bg);color:var(--grn);border-color:#A8DFC0}
+.d-act{background:var(--blu);color:#fff;animation:dotPulse 1.8s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(74,127,222,.5)}50%{box-shadow:0 0 0 5px rgba(74,127,222,0)}}
+.d-left{background:var(--red-bg);color:var(--red);border-color:#F0B8B8}
+.d-wait{background:#fff;color:#C0CEEA;border-color:#D8E0F0}
+
+/* rating (adaptation score) */
+.rate-dots{display:flex;gap:3px;align-items:center}
+.rate-dots i{width:10px;height:10px;border-radius:50%;flex-shrink:0;font-style:normal}
+.rate-dots i.on{background:var(--grn)}
+.rate-dots i.on.me{background:var(--accent)}
+.rate-dots i.off{background:#EEF2F8;border:1px solid #D8E0F0}
+.rate-pending{font-size:11px;color:var(--muted);font-style:italic}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,15,50,.55);backdrop-filter:blur(4px);z-index:2000;
+  display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:22px;max-width:560px;width:100%;max-height:86vh;overflow-y:auto;
+  padding:32px;position:relative;transform:translateY(30px) scale(.97);transition:transform .3s cubic-bezier(.22,1,.36,1);box-shadow:0 30px 80px rgba(0,20,60,.35)}
+.modal-overlay.show .modal{transform:translateY(0) scale(1)}
+.modal-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;border:none;background:var(--gry-bg);
+  color:var(--muted);font-size:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--red-bg);color:var(--red);transform:rotate(90deg)}
+.m-head{margin-bottom:20px;padding-right:40px}
+.m-name{font-size:22px;font-weight:800;color:var(--dark)}
+.m-vac{font-size:14px;color:var(--muted);margin-top:4px}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.m-item{background:var(--bg);border-radius:12px;padding:12px 14px}
+.m-item b{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;font-weight:700}
+.m-item span{font-size:14px;font-weight:700;color:var(--txt)}
+.m-onb-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 12px}
+.m-onb{display:flex;gap:10px;flex-wrap:wrap}
+.m-onb-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:70px}
+.m-onb-step .dot{width:34px;height:34px;font-size:13px}
+.m-onb-step small{font-size:9px;color:var(--muted);text-align:center}
+
+footer{background:var(--dark);color:#94A8CC;text-align:center;padding:30px 20px;font-size:12px;margin-top:60px}
+footer b{color:#fff}
+
+/* ── GANTT ── */
+.gantt-card{background:var(--card);border-radius:18px;border:1px solid #E4EAF6;padding:0;overflow:hidden;opacity:0;transform:translateY(30px)}
+.gantt-card.visible{opacity:1;transform:translateY(0);transition:.6s}
+.g-scroll{overflow-x:auto}
+.g-inner{min-width:1000px}
+.g-months{display:flex;background:var(--dark)}
+.g-mlabel-spacer{width:210px;flex-shrink:0}
+.g-mlabels{flex:1;display:flex}
+.g-mlabel{flex:1;text-align:center;font-size:10px;font-weight:800;color:#fff;padding:8px 2px;border-left:1px solid rgba(255,255,255,.15);text-transform:uppercase;letter-spacing:.05em}
+.g-sec{background:linear-gradient(90deg,var(--dark),#0F2F6A);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:8px 16px}
+.g-row{display:flex;border-bottom:1px solid #F0F4FA;position:relative;transition:background .15s}
+.g-row:hover{background:#F4F8FE}
+.g-name{width:210px;flex-shrink:0;padding:10px 16px;font-size:12px;font-weight:600;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-bars{flex:1;position:relative;height:40px}
+.g-grid{position:absolute;inset:0;display:flex}
+.g-cell{flex:1;border-left:1px solid #F2F5FA}
+.g-bar{position:absolute;height:11px;border-radius:6px;width:0;transition:width 1.2s cubic-bezier(.22,1,.36,1),left 1.2s cubic-bezier(.22,1,.36,1);top:14px}
+.g-today{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:5;animation:gpulse 2s ease-in-out infinite}
+@keyframes gpulse{0%,100%{opacity:1}50%{opacity:.4}}
+.g-today-flag{position:absolute;top:-2px;transform:translateX(-50%);background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;z-index:6}
+
+/* count-up target marker (no visual, just for JS) */
+.kpi-value{transition:none}
+.chjs-wrap{position:relative;height:220px}
+.chjs-wrap.tall{height:260px}
+.chjs-wrap.taller{height:360px}
+
+
+
+@media(max-width:640px){
+  .hero{min-height:280px;padding:44px 16px 70px}
+  .hstat{padding:12px 18px}.hstat-v{font-size:20px}
+  .wrap{padding:16px 14px 40px}
+  .sh-title{font-size:19px}
+  .kpi{padding:18px}.kpi-value{font-size:27px}
+  .vtab{padding:8px 18px;font-size:13px}
+  .ftab{padding:6px 12px;font-size:11px;border-radius:9px}
+  .search-box{min-width:100%;margin-left:0}
+  .badge{padding:3px 8px;font-size:9px}
+  thead th{padding:9px 10px;font-size:9px}
+  tbody td{padding:8px 10px;font-size:11px}
+  .bud-name{width:110px;font-size:11px}
+  .tbl-scroll table{min-width:760px}
+  .modal{padding:24px}
+  .m-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="scrollbar"></div>
+
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">WIM Advisory · HR · 2026</div>
+    <h1>Рекрутмент 2026</h1>
+    <p>Наём и активные поиски — Whitecliff и клиентские компании</p>
+    <div class="hero-stats" id="heroStats"></div>
+  </div>
+  <div class="wave">
+    <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
+      <path class="ow ow1" d="M0,50 C240,80 480,20 720,45 C960,70 1200,30 1440,55 L1440,90 L0,90 Z" fill="rgba(238,243,252,.4)"/>
+      <path class="ow ow2" d="M0,65 C260,35 520,85 780,60 C1040,35 1260,75 1440,60 L1440,90 L0,90 Z" fill="#EEF3FC"/>
+    </svg>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="vtab on" data-view="wim">Whitecliff <span class="cnt" id="cnt-wim"></span></div>
+  <div class="vtab" data-view="cl">Клиенты <span class="cnt" id="cnt-cl"></span></div>
+  <div class="vtab" data-view="mgmt">Управление подбором</div>
+</nav>
+
+<div class="wrap">
+ <div id="paneHires">
+  <div class="section-head"><div class="sh-num">1</div><div class="sh-title">Ключевые показатели</div><div class="sh-line"></div></div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="section-head"><div class="sh-num">2</div><div class="sh-title">Аналитика</div><div class="sh-line"></div></div>
+  <div class="charts">
+    <div class="chart-card">
+      <div class="chart-title">Активные поиски по статусам</div>
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg width="160" height="160" viewBox="0 0 160 160" id="donutSvg"></svg>
+          <div class="donut-center"><b id="donutTotal">0</b><span>позиций</span></div>
+        </div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Наём по месяцам · 2026</div>
+      <div class="mchart" id="monthChart"></div>
+    </div>
+  </div>
+  <div class="charts2">
+    <div class="chart-card">
+      <div class="chart-title">Наём по рекрутёрам</div>
+      <div id="barLeft"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" id="barRightTitle">Источники кандидатов</div>
+      <div id="barRight"></div>
+    </div>
+  </div>
+
+  <div class="section-head"><div class="sh-num">3</div><div class="sh-title" id="hiredTitle">Нанятые сотрудники · 2026</div><div class="sh-line"></div></div>
+
+  <div class="toolbar" id="hiredTabs"></div>
+  <div class="tbl-card">
+    <div class="tbl-scroll">
+      <table>
+        <thead id="hiredHead"></thead>
+        <tbody id="hiredBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-head"><div class="sh-num">4</div><div class="sh-title">Активные поиски</div><div class="sh-line"></div></div>
+  <div class="toolbar" id="searchTabs"></div>
+  <div class="tbl-card">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>Компания</th><th>Вакансия</th><th>Локация</th><th>Заказчик</th><th style="text-align:center">Кол-во</th><th>Старт поиска</th><th style="text-align:center">Дней в поиске</th><th>Статус</th><th>Рекрутёр</th><th style="text-align:center">Приоритет</th></tr>
+        </thead>
+        <tbody id="searchBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="leg"><span class="badge b-search">Поиск</span></div>
+    <div class="leg"><span class="badge b-sec">Проверка СБ</span></div>
+    <div class="leg"><span class="badge b-hire">Оформление</span></div>
+    <div class="leg"><span class="badge b-hold">Пауза</span></div>
+  </div>
+ </div>
+
+ <div id="paneMgmt" style="display:none">
+    <div class="section-head"><div class="sh-num">1</div><div class="sh-title">Загрузка и продуктивность рекрутёров</div><div class="sh-line"></div><div class="sh-sub" id="holdNote"></div></div>
+    <div class="tbl-card visible">
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Рекрутёр</th><th>Whitecliff (внутр.)</th><th>Клиенты: массовый</th><th>Клиенты: проф</th><th>Активно всего</th><th>Закрыто Q1</th><th>Закрыто 2026</th><th>Медиана, дн.</th></tr></thead>
+          <tbody id="recruiterBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sh-sub" style="margin-top:10px">Whitecliff — внутренний рекрутинг для своей компании, не относится к массовому/профподбору. Деление массовый/проф применяется только к вакансиям клиентов.</div>
+
+    <div class="section-head"><div class="sh-num">1.1</div><div class="sh-title">Внутренний рекрутинг vs подбор для клиентов</div><div class="sh-line"></div></div>
+    <div class="charts2" id="massProfCards"></div>
+
+    <div class="section-head"><div class="sh-num">1.2</div><div class="sh-title">Медиана срока закрытия — грейд и юрисдикция</div><div class="sh-line"></div></div>
+    <div class="charts2">
+      <div class="chart-card visible"><div class="chart-title">По грейду (C1–C5, Whitecliff)</div><div id="gradeMedianChart"></div></div>
+      <div class="chart-card visible"><div class="chart-title">По юрисдикции</div><div id="countryMedianChart"></div></div>
+    </div>
+
+    <div class="section-head"><div class="sh-num">1.3</div><div class="sh-title">Медиана срока закрытия — по заказчику</div><div class="sh-line"></div><div class="sh-sub">где именно тормозит процесс</div></div>
+    <div class="chart-card visible" style="padding:20px 24px"><div id="hmMedianChart"></div></div>
+
+    <div class="section-head"><div class="sh-num">2</div><div class="sh-title">Качество подбора</div><div class="sh-line"></div><div class="sh-sub">по испытательному сроку · только Whitecliff</div></div>
+    <div class="charts">
+      <div class="chart-card visible">
+        <div class="chart-title">Распределение оценок</div>
+        <div class="donut-wrap">
+          <div class="donut"><svg width="160" height="160" viewBox="0 0 160 160" id="qualityDonutSvg"></svg>
+            <div class="donut-center"><b id="qualityDonutTotal">0</b><span>оценено</span></div></div>
+          <div class="donut-legend" id="qualityDonutLegend"></div>
+        </div>
+      </div>
+      <div class="chart-card visible"><div class="chart-title">Качество по рекрутёру</div><div id="qualityByRecruiter"></div></div>
+    </div>
+
+    <div class="section-head"><div class="sh-num">2.1</div><div class="sh-title">Источник лучших наймов</div><div class="sh-line"></div></div>
+    <div class="charts2">
+      <div class="chart-card visible"><div class="chart-title">Источник · Exceed Expectations</div><div id="sourceExceed"></div></div>
+      <div class="chart-card visible"><div class="chart-title">Источник · Meets Expectations</div><div id="sourceMeets"></div></div>
+    </div>
+
+    <div class="section-head"><div class="sh-num">4</div><div class="sh-title">P&amp;L подбора — доходная часть</div><div class="sh-line"></div><div class="sh-sub" id="pnlNote"></div></div>
+    <div class="kpi-grid" id="pnlKpi"></div>
+    <div class="charts2" style="margin-top:16px">
+      <div class="chart-card visible"><div class="chart-title">Fee по рекрутёрам</div><div id="feeByRecruiter"></div></div>
+      <div class="chart-card visible"><div class="chart-title">Fee по клиентам</div><div id="feeByClient"></div></div>
+    </div>
+ </div>
+</div>
+
+<footer>Дашборд рекрутмента · <b>WIM Advisory</b> · данные на 06.07.2026</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal"><button class="modal-close" id="modalClose">✕</button><div id="modalBody"></div></div>
+</div>
+
+<script>
+const DATA = {"wim":[{"employer":"WIM","unit":"Департамент финансовой отчётности","vacancy":"Ст. специалист по финотчётности","country":"Россия","location":"Москва","grade":"C3","customer":"Елизавета Василченко","start":"2025-11-01","status":"Employed","manager":"Латаура","source":"Реферал","referral":"Елизавета Василченко","period":53,"offer":"2025-11-25","employed":"2026-01-14","candidate":"Полуфакина Елезавета","leave":null,"day14":{"state":"done","date":"2026-01-28"},"day30":{"state":"done","date":"2026-02-13"},"day60":{"state":"done","date":"2026-03-15"},"day75":{"state":"done","date":"2026-03-30"},"day90":{"state":"done","date":"2026-04-14"},"trial":"4-EE","satisfaction":null,"insurance":"Active","rating":{"state":"scored","score":4,"code":"EE"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"Финансовый контролёр (РФ)","country":"Россия","location":"Москва","grade":"С5","customer":"Екатерина Козлова","start":"2025-10-30","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":56,"offer":"2025-12-18","employed":"2026-01-15","candidate":"Артамонов Николай","leave":null,"day14":{"state":"done","date":"2026-01-29"},"day30":{"state":"done","date":"2026-02-14"},"day60":{"state":"done","date":"2026-03-16"},"day75":{"state":"done","date":"2026-03-31"},"day90":{"state":"done","date":"2026-04-15"},"trial":"4-EE","satisfaction":null,"insurance":"Active","rating":{"state":"scored","score":4,"code":"EE"}},{"employer":"WIM","unit":"Департамент управления проектами","vacancy":"Налоговый менеджер","country":"Россия","location":"Москва","grade":"C5","customer":"Елена Якубовская","start":"2025-11-01","status":"Employed","manager":"Надежда","source":"Внутр. поиск (Надежда)","referral":null,"period":53,"offer":"2025-12-20","employed":"2026-01-14","candidate":"Солдатенко Виктория","leave":null,"day14":{"state":"done","date":"2026-01-28"},"day30":{"state":"done","date":"2026-02-13"},"day60":{"state":"done","date":"2026-03-15"},"day75":{"state":"done","date":"2026-03-30"},"day90":{"state":"done","date":"2026-04-14"},"trial":"3-ME","satisfaction":null,"insurance":"Active","rating":{"state":"scored","score":3,"code":"ME"}},{"employer":"WIM","unit":"Администрация","vacancy":"Финансовый директор (CFO)","country":"Россия","location":"Moscow, Dubai","grade":"C1","customer":"Елиасов Роман","start":"2025-11-10","status":"Employed","manager":"Надежда","source":"Внутр. поиск (Надежда)","referral":null,"period":51,"offer":"2026-01-14","employed":"2026-01-19","candidate":"Пашнев Владислав","leave":null,"day14":{"state":"done","date":"2026-02-02"},"day30":{"state":"done","date":"2026-02-18"},"day60":{"state":"done","date":"2026-03-20"},"day75":{"state":"done","date":"2026-04-04"},"day90":{"state":"done","date":"2026-04-19"},"trial":"3-ME","satisfaction":null,"insurance":"Active","rating":{"state":"scored","score":3,"code":"ME"}},{"employer":"WIM","unit":"Департамент финансовой отчётности","vacancy":"Бухгалтер","country":"Россия","location":"Певек","grade":"C5","customer":"Елена Егорова","start":"2025-11-19","status":"Leave","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":49,"offer":"2026-01-23","employed":"2026-01-26","candidate":"Фискович Александер","leave":"2026-03-02","day14":{"state":"done","date":"2026-02-09"},"day30":{"state":"done","date":"2026-02-25"},"day60":{"state":"left","date":null},"day75":{"state":"left","date":null},"day90":{"state":"left","date":null},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"left"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"Специалист travel-поддержки","country":"Россия","location":"Москва","grade":"C5","customer":"Лилиана Илсуева","start":"2026-01-01","status":"Employed","manager":"Аэлита","source":"Реферал","referral":"Ирина Аббасова","period":18,"offer":"2026-01-21","employed":"2026-01-26","candidate":"Гусева Алена","leave":null,"day14":{"state":"done","date":"2026-02-09"},"day30":{"state":"done","date":"2026-02-25"},"day60":{"state":"done","date":"2026-03-27"},"day75":{"state":"done","date":"2026-04-11"},"day90":{"state":"done","date":"2026-04-26"},"trial":"3-ME","satisfaction":null,"insurance":"No active","rating":{"state":"scored","score":3,"code":"ME"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"Специалист по закупкам 223-ФЗ","country":"Россия","location":"Москва","grade":"C5","customer":"Каменский Петр","start":"2026-01-20","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":26,"offer":"2026-02-17","employed":"2026-02-24","candidate":"Михаил Муттик","leave":null,"day14":{"state":"done","date":"2026-03-10"},"day30":{"state":"done","date":"2026-03-26"},"day60":{"state":"done","date":"2026-04-25"},"day75":{"state":"done","date":"2026-05-10"},"day90":{"state":"done","date":"2026-05-25"},"trial":"3-ME","satisfaction":null,"insurance":"Active","rating":{"state":"scored","score":3,"code":"ME"}},{"employer":"WIM","unit":"Центр управления проектами","vacancy":"Руководитель группы планирования","country":"Россия","location":"Москва","grade":"C4","customer":"Сердитов Борис","start":"2025-12-11","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":56,"offer":"2026-02-17","employed":"2026-02-26","candidate":"Михаил Пасечник","leave":null,"day14":{"state":"done","date":"2026-03-12"},"day30":{"state":"done","date":"2026-03-28"},"day60":{"state":"done","date":"2026-04-27"},"day75":{"state":"done","date":"2026-05-12"},"day90":{"state":"done","date":"2026-05-27"},"trial":"3-ME","satisfaction":null,"insurance":"Active","rating":{"state":"scored","score":3,"code":"ME"}},{"employer":"WIM","unit":"Администрация","vacancy":"Внутренний аудитор","country":"Россия","location":"Москва","grade":"C5","customer":"Владислав Пашнев","start":"2026-01-22","status":"Employed","manager":"Надежда","source":"Внутр. поиск (Латаура)","referral":null,"period":41,"offer":"2026-02-20","employed":"2026-03-19","candidate":"Константин Гарбовский","leave":null,"day14":{"state":"done","date":"2026-04-02"},"day30":{"state":"done","date":"2026-04-18"},"day60":{"state":"done","date":"2026-05-18"},"day75":{"state":"done","date":"2026-06-02"},"day90":{"state":"done","date":"2026-06-17"},"trial":"3-ME","satisfaction":null,"insurance":"No active","rating":{"state":"scored","score":3,"code":"ME"}},{"employer":"WIM","unit":"Департамент финансовой отчётности","vacancy":"Ст. менеджер по финотчётности","country":"Россия","location":"Москва","grade":"C3","customer":"Василченко Елизавета","start":"2025-08-15","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":157,"offer":"2026-03-16","employed":"2026-03-23","candidate":"Епифанов Иван","leave":null,"day14":{"state":"done","date":"2026-04-06"},"day30":{"state":"done","date":"2026-04-22"},"day60":{"state":"done","date":"2026-05-22"},"day75":{"state":"done","date":"2026-06-06"},"day90":{"state":"done","date":"2026-06-21"},"trial":"4-EE","satisfaction":null,"insurance":"No active","rating":{"state":"scored","score":4,"code":"EE"}},{"employer":"WIM","unit":"Команда отчётности (РФ)","vacancy":"Старший бухгалтер","country":"Россия","location":"Москва","grade":"C4","customer":"Елена Егорова","start":"2025-11-27","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":85,"offer":"2026-03-20","employed":"2026-03-25","candidate":"Чекунова Ирина","leave":null,"day14":{"state":"done","date":"2026-04-08"},"day30":{"state":"done","date":"2026-04-24"},"day60":{"state":"done","date":"2026-05-24"},"day75":{"state":"done","date":"2026-06-08"},"day90":{"state":"done","date":"2026-06-23"},"trial":"4-EE","satisfaction":null,"insurance":"No active","rating":{"state":"scored","score":4,"code":"EE"}},{"employer":"WIM","unit":"Администрация","vacancy":"Личный ассистент","country":"Казахстан","location":"Алматы","grade":"C5","customer":"Роман Елиасов","start":"2026-01-15","status":"Leave","manager":"Надежда","source":"Внутр. поиск (Латаура)","referral":null,"period":68,"offer":"2026-04-09","employed":"2026-04-20","candidate":"Саадат Сидигалиева","leave":"2026-05-22","day14":{"state":"done","date":"2026-05-04"},"day30":{"state":"done","date":"2026-05-20"},"day60":{"state":"left","date":null},"day75":{"state":"left","date":null},"day90":{"state":"left","date":null},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"left"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"Специалист по финконтролю и биллингу","country":"Россия","location":"Москва","grade":"C5","customer":"Артамонов Николай","start":"2026-03-25","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":19,"offer":"2026-04-10","employed":"2026-04-20","candidate":"Анна Луковая","leave":null,"day14":{"state":"done","date":"2026-05-04"},"day30":{"state":"done","date":"2026-05-20"},"day60":{"state":"done","date":"2026-06-19"},"day75":{"state":"done","date":"2026-07-04"},"day90":{"state":"done","date":"2026-07-19"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Администрация","vacancy":"Офис-менеджер","country":"ОАЭ","location":"Дубай","grade":"C5","customer":"Владлена Буреева","start":"2026-01-22","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":66,"offer":"2026-04-21","employed":"2026-04-23","candidate":"Алина Голова","leave":null,"day14":{"state":"done","date":"2026-05-07"},"day30":{"state":"done","date":"2026-05-23"},"day60":{"state":"done","date":"2026-06-22"},"day75":{"state":"done","date":"2026-07-07"},"day90":{"state":"done","date":"2026-07-22"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"VERUM","unit":"Юридическая команда (KZ)","vacancy":"Старший юрист","country":"Казахстан","location":"Алматы","grade":"C4","customer":"Тиленбаев Улан","start":"2026-03-19","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":39,"offer":"2026-04-21","employed":"2026-05-12","candidate":"Баянова Алтинай","leave":null,"day14":{"state":"done","date":"2026-05-26"},"day30":{"state":"done","date":"2026-06-11"},"day60":{"state":"done","date":"2026-07-11"},"day75":{"state":"done","date":"2026-07-26"},"day90":{"state":"done","date":"2026-08-10"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Департамент финансовой отчётности","vacancy":"Бухгалтер по расчёту зарплаты","country":"Россия","location":"Москва","grade":"C5","customer":"Юлия Василева","start":"2026-04-21","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":9,"offer":"2026-05-05","employed":"2026-05-12","candidate":"Игнатова Олеся","leave":null,"day14":{"state":"done","date":"2026-05-26"},"day30":{"state":"done","date":"2026-06-11"},"day60":{"state":"done","date":"2026-07-11"},"day75":{"state":"done","date":"2026-07-26"},"day90":{"state":"done","date":"2026-08-10"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Администрация","vacancy":"Офис-менеджер","country":"Россия","location":"Москва","grade":"C5","customer":"Александер Ан","start":"2026-03-13","status":"Employed","manager":"Аэлита","source":"Реферал","referral":"Анна Луковая","period":50,"offer":"2026-05-07","employed":"2026-05-21","candidate":"Диана Орган","leave":null,"day14":{"state":"done","date":"2026-06-04"},"day30":{"state":"done","date":"2026-06-20"},"day60":{"state":"done","date":"2026-07-20"},"day75":{"state":"done","date":"2026-08-04"},"day90":{"state":"done","date":"2026-08-19"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Юридический департамент","vacancy":"Менеджер проектной администрации","country":"Россия","location":"Москва","grade":"C5","customer":"Чинетов Азамат","start":"2026-03-31","status":"Leave","manager":"Аэлита","source":"Внутр. поиск (Надежда)","referral":null,"period":40,"offer":"2026-05-04","employed":"2026-05-25","candidate":"Елизавета Турина","leave":null,"day14":{"state":"done","date":"2026-06-08"},"day30":{"state":"done","date":"2026-06-24"},"day60":{"state":"done","date":"2026-07-24"},"day75":{"state":"done","date":"2026-08-08"},"day90":{"state":"done","date":"2026-08-23"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Департамент финансовой отчётности","vacancy":"Бухгалтер","country":"Россия","location":"Певек","grade":"C5","customer":"Елена Егорова","start":"2026-03-03","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":54,"offer":"2026-05-04","employed":"2026-05-15","candidate":"Лилия Латипова","leave":null,"day14":{"state":"done","date":"2026-05-29"},"day30":{"state":"done","date":"2026-06-14"},"day60":{"state":"done","date":"2026-07-14"},"day75":{"state":"done","date":"2026-07-29"},"day90":{"state":"done","date":"2026-08-13"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Юридический департамент","vacancy":"Старший юрист (Associate)","country":"ОАЭ","location":"Дубай","grade":"C4","customer":"Марко Radosavljevic","start":"2026-03-12","status":"Employed","manager":"Надежда","source":"Агентство APS Resources","referral":null,"period":44,"offer":"2026-04-30","employed":"2026-05-12","candidate":"Сридеви Венкалаз","leave":null,"day14":{"state":"done","date":"2026-05-26"},"day30":{"state":"done","date":"2026-06-11"},"day60":{"state":"done","date":"2026-07-11"},"day75":{"state":"done","date":"2026-07-26"},"day90":{"state":"done","date":"2026-08-10"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Администрация","vacancy":"Менеджер по инвестициям и казначейству","country":"Россия","location":"Москва","grade":"С2","customer":"Владлена Буреева","start":"2026-02-24","status":"Employed","manager":"Надежда","source":"Агентство APS Resources","referral":null,"period":45,"offer":"2026-04-20","employed":"2026-04-27","candidate":"Мингалев Антон","leave":null,"day14":{"state":"done","date":"2026-05-11"},"day30":{"state":"done","date":"2026-05-27"},"day60":{"state":"done","date":"2026-06-26"},"day75":{"state":"done","date":"2026-07-11"},"day90":{"state":"done","date":"2026-07-26"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"Omega SC","unit":"Департамент финансовых операций","vacancy":"HR-специалист","country":"Россия","location":"Алматы","grade":"C5","customer":"Сауле","start":"2026-04-20","status":"Employed","manager":"Аэлита","source":"Реферал","referral":"Сауле Коишибаева","period":41,"offer":"2026-06-09","employed":"2026-06-15","candidate":"Шалабаева Рисгул","leave":null,"day14":{"state":"done","date":"2026-06-29"},"day30":{"state":"done","date":"2026-07-15"},"day60":{"state":"done","date":"2026-08-14"},"day75":{"state":"done","date":"2026-08-29"},"day90":{"state":"done","date":"2026-09-13"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM KZ","unit":"Администрация","vacancy":"Офис-менеджер","country":"Казахстан","location":"Алматы","grade":"C5","customer":"Вадим Пахомов","start":"2026-03-13","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":63,"offer":"2026-06-19","employed":"2026-06-22","candidate":"Екатерина Гагарина","leave":null,"day14":{"state":"done","date":"2026-07-06"},"day30":{"state":"done","date":"2026-07-22"},"day60":{"state":"done","date":"2026-08-21"},"day75":{"state":"done","date":"2026-09-05"},"day90":{"state":"done","date":"2026-09-20"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WBS KZ","unit":"Департамент финансовой отчётности","vacancy":"Ст. менеджер по финотчётности (KZ)","country":"Россия","location":"Москва","grade":"С3","customer":"Василченко Елизавета","start":"2026-04-03","status":"Employed","manager":"Надежда","source":"Агентство APS Resources","referral":null,"period":57,"offer":"2026-06-19","employed":"2026-06-22","candidate":"Оксана Брянткева","leave":null,"day14":{"state":"done","date":"2026-07-06"},"day30":{"state":"done","date":"2026-07-22"},"day60":{"state":"done","date":"2026-08-21"},"day75":{"state":"done","date":"2026-09-05"},"day90":{"state":"done","date":"2026-09-20"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"Менеджер по биллингу","country":"Россия","location":"Москва","grade":"С4","customer":"Владислав Пашнев","start":"2026-05-13","status":"Employed","manager":"Надежда","source":"Агентство APS Resources","referral":null,"period":39,"offer":"2026-06-26","employed":"2026-07-06","candidate":"Надежда Трусова","leave":null,"day14":{"state":"done","date":"2026-07-20"},"day30":{"state":"done","date":"2026-08-05"},"day60":{"state":"done","date":"2026-09-04"},"day75":{"state":"done","date":"2026-09-19"},"day90":{"state":"done","date":"2026-10-04"},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"Руководитель биллинга и взысканий","country":"Россия","location":"Москва","grade":"С3","customer":"Владислав Пашнев","start":"2026-05-13","status":"JO","manager":"Надежда","source":"Внутр. поиск (Надежда)","referral":null,"period":null,"offer":null,"employed":null,"candidate":"Федор Беляков","leave":null,"day14":{"state":"pending","date":null},"day30":{"state":"pending","date":null},"day60":{"state":"pending","date":null},"day75":{"state":"pending","date":null},"day90":{"state":"pending","date":null},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Департамент финансовых операций","vacancy":"HR-менеджер проекта","country":"Россия","location":"Москва","grade":"С3","customer":"Владлена Буреева","start":"2025-12-01","status":"JO","manager":"Надежда","source":"Агентство Assistance","referral":null,"period":null,"offer":null,"employed":null,"candidate":"Дмитрий Криско","leave":null,"day14":{"state":"pending","date":null},"day30":{"state":"pending","date":null},"day60":{"state":"pending","date":null},"day75":{"state":"pending","date":null},"day90":{"state":"pending","date":null},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Юридический департамент","vacancy":"Директор","country":"СНГ","location":"Сингапур","grade":"С3","customer":"Марко Radosavljevic","start":"2026-05-29","status":"JO","manager":"Надежда","source":"Реферал","referral":"Владислав Пашнев","period":null,"offer":null,"employed":null,"candidate":"Вичеслав Шилин","leave":null,"day14":{"state":"pending","date":null},"day30":{"state":"pending","date":null},"day60":{"state":"pending","date":null},"day75":{"state":"pending","date":null},"day90":{"state":"pending","date":null},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}},{"employer":"WIM","unit":"Департамент управления проектами","vacancy":"Менеджер проекта (ликвидация)","country":"Россия","location":"Алматы","grade":"С5","customer":"Елена Якубовская","start":"2026-02-10","status":"JO","manager":"Надежда","source":"Внутр. поиск (Надежда)","referral":null,"period":null,"offer":null,"employed":null,"candidate":"Темирлан","leave":null,"day14":{"state":"pending","date":null},"day30":{"state":"pending","date":null},"day60":{"state":"pending","date":null},"day75":{"state":"pending","date":null},"day90":{"state":"pending","date":null},"trial":"0-N/A","satisfaction":null,"insurance":"No active","rating":{"state":"pending"}}],"clients":[{"employer":"Порт Певек","unit":"—","vacancy":"Радиооператор 2 категории","country":"Россия","location":"Певек","customer":"Карелин Константин","start":"2025-10-01","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":77,"offer":"2025-12-08","employed":"2026-01-15","candidate":"Головина Кристина","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Электрогазосварщик (4-5 разряд)","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2025-11-26","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":41,"offer":"2026-01-14","employed":"2026-01-21","candidate":"Сергей Канашин","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Механик по ремонту техники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2025-12-17","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":30,"offer":"2026-01-21","employed":"2026-01-27","candidate":"Максим Жидков","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Автоэлектрик","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2025-11-30","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":57,"offer":"2026-01-29","employed":"2026-02-17","candidate":"Анатолий Вшивтсев","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Порт Певек","unit":"Отдел учёта и отчётности","vacancy":"Ведущий бухгалтер","country":"Россия","location":"Удалённый формат","customer":"Ирина Чумак","start":"2026-01-21","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":21,"offer":"2026-02-17","employed":"2026-02-18","candidate":"Виктория Шершунова","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"ЧОП «Гелион»","unit":"—","vacancy":"Охранник","country":"Россия","location":"Чукотский АО","customer":"Олег Рябов","start":"2026-02-01","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":15,"offer":"2026-02-05","employed":"2026-02-20","candidate":"Шабалин Евгений","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"ЧОП «Гелион»","unit":"—","vacancy":"Охранник","country":"Россия","location":"Чукотский АО","customer":"Олег Рябов","start":"2026-02-01","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":19,"offer":"2026-02-10","employed":"2026-02-26","candidate":"Сопоев Тинибай","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Techinvest","unit":"Департамент финансовых операций","vacancy":"Финансовый контролёр","country":"Россия","location":"Москва","customer":"Седов Анатолий","start":"2026-01-15","status":"Employed","manager":"Аэлита","source":"Реферал","referral":"Анатолий Седов","period":48,"offer":null,"employed":"2026-03-23","candidate":"Елена Баришева","grade":"Specialist","fee":null,"seg":"prof"},{"employer":"Порт Певек","unit":"—","vacancy":"Менеджер проекта","country":"Россия","location":"Москва","customer":"Вячеслав Доманин","start":"2026-02-02","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":36,"offer":"2026-03-04","employed":"2026-03-23","candidate":"Федор Степанов","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Altay Resources","unit":"—","vacancy":"Главный бухгалтер","country":"Казахстан","location":"Алматы","customer":"Волков Василий","start":"2025-07-11","status":"Employed","manager":"Аэлита","source":"Коллеги","referral":null,"period":174,"offer":"2026-03-25","employed":"2026-03-11","candidate":"Римма Коитанова","grade":"Specialist","fee":null,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":9,"offer":"2026-03-03","employed":"2026-03-09","candidate":"Сергейчук Андре","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":9,"offer":"2026-03-03","employed":"2026-03-09","candidate":"Леонович Андрей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":9,"offer":"2026-03-03","employed":"2026-03-09","candidate":"Зангиров Зенфир","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":9,"offer":"2026-03-03","employed":"2026-03-09","candidate":"Бордзикидзе Мамука","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":13,"offer":"2026-03-03","employed":"2026-03-13","candidate":"Александер Бабичев","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Порт Певек","unit":"IT-отдел","vacancy":"Администратор 1С","country":"Россия","location":"Певек","customer":"Вячеслав Доманин","start":"2026-02-02","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":48,"offer":"2026-03-10","employed":"2026-04-08","candidate":"Абулгазинов Евгений","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"Отдел ПТО","vacancy":"Геодезист","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-09","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":43,"offer":"2026-03-30","employed":"2026-04-08","candidate":"Константин Усов","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-20","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":34,"offer":"2026-02-22","employed":"2026-04-08","candidate":"Архиреев Александер","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Плотник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Хоменок Евгений","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Стрелский Андрей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Козел' Александер","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Рябухин Сергей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Романович Вячеслав","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Плотник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Зуенок Виталий","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Козлов Стас","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Владислав Шумак","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":45,"offer":"2026-02-26","employed":"2026-04-08","candidate":"Коноплин Сергей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":54,"offer":"2026-02-26","employed":"2026-04-21","candidate":"Денис Кочетов","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"ЧОП «Гелион»","unit":"—","vacancy":"Охранник","country":"Россия","location":"Чукотский АО","customer":"Олег Рябов","start":"2026-03-01","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":28,"offer":"2026-03-06","employed":"2026-04-08","candidate":"Бабаев Адил","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"ЧОП «Гелион»","unit":"—","vacancy":"Охранник","country":"Россия","location":"Чукотский АО","customer":"Олег Рябов","start":"2026-03-01","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":28,"offer":"2026-03-06","employed":"2026-04-08","candidate":"Савастюк Сергей","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":7,"offer":"2026-03-01","employed":"2026-04-08","candidate":"Соколов Сергей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Порт Певек","unit":"IT-отдел","vacancy":"Руководитель IT-отдела","country":"Россия","location":"Певек","customer":"Олег Алексеев","start":"2026-02-02","status":"Employed","manager":"Латаура","source":"Коллеги","referral":null,"period":41,"offer":"2026-03-04","employed":"2026-03-30","candidate":"Олег Алексеев","grade":"Specialist","fee":null,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Механик по ремонту техники и автотранспорта","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-23","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":18,"offer":"2026-04-07","employed":"2026-04-15","candidate":"Артем Моршинов","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"has not arrived","manager":"Любовь","source":"Коллеги","referral":null,"period":36,"offer":"2026-04-06","employed":"2026-04-15","candidate":"Фролов Андрей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"GA","unit":"IT и безопасность (РФ)","vacancy":"Специалист HelpDesk","country":"Россия","location":"Москва","customer":"Виктор Прокопчук","start":"2025-07-31","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":62,"offer":"2026-04-09","employed":"2026-04-30","candidate":"Ян Листратенко","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Порт Певек","unit":"Административно-хозяйственный отдел","vacancy":"Медсестра","country":"Россия","location":"Певек","customer":"Карелин Константин","start":"2025-10-31","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":103,"offer":"2026-04-10","employed":"2026-04-22","candidate":"Татяна Штутскаия","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Порт Певек","unit":"—","vacancy":"Супервайзер по обслуживанию","country":"Россия","location":"Певек","customer":"Александер Тихомиров","start":"2026-04-08","status":"Employed","manager":"Латаура","source":"Коллеги","referral":null,"period":16,"offer":"2026-04-10","employed":"2026-04-29","candidate":"Алексей Рожков","grade":"Specialist","fee":null,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Прораб","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-15","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":27,"offer":"2026-04-14","employed":"2026-04-21","candidate":"Демахин Максим","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":16,"offer":"2026-04-07","employed":"2026-04-21","candidate":"Анатолий Макеев","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-02-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":40,"offer":"2026-04-06","employed":"2026-04-21","candidate":"Ефимов Александер","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"GA","unit":"IT и безопасность (РФ)","vacancy":"Руководитель экон. безопасности","country":"Россия","location":"Певек","customer":"Анастасия Журавлева","start":"2026-02-04","status":"Employed","manager":"Любовь","source":"Агентство APS Resources","referral":null,"period":71,"offer":"2026-04-10","employed":"2026-05-13","candidate":"Чернобров Александер","grade":"Manager","fee":344828,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":32,"offer":"2026-04-28","employed":"2026-05-13","candidate":"Зименко Андрей","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-04-27","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":3,"offer":"2026-04-27","employed":"2026-04-29","candidate":"Кохан Михаил","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-04-27","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":8,"offer":"2026-04-27","employed":"2026-05-06","candidate":"Хуранов Рустам","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Отдел строительства","vacancy":"Лаборант","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-04-06","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":28,"offer":"2026-04-29","employed":"2026-05-13","candidate":"Александер Кузнетсов","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Порт Певек","unit":"Отдел стратегии и развития","vacancy":"Ст. специалист отдела тарифов и ценообразования","country":"Россия","location":"Удалённый формат","customer":"Наталия Севастянова","start":"2026-01-30","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":73,"offer":"2026-05-04","employed":"2026-05-12","candidate":"Толмачев Василий","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Порт Певек","unit":"IT-отдел","vacancy":"Сетевой инженер","country":"Россия","location":"Певек","customer":"Вячеслав Доманин","start":"2026-03-20","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":38,"offer":"2026-04-30","employed":"2026-05-12","candidate":"Иван Ганихин","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Латаура","source":"Коллеги","referral":null,"period":19,"offer":"2026-04-21","employed":"2026-04-25","candidate":"Виктор Булгаков","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Латаура","source":"Коллеги","referral":null,"period":31,"offer":"2026-04-24","employed":"2026-05-12","candidate":"Харитонов Дмитрий","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Плотник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Латаура","source":"Коллеги","referral":null,"period":35,"offer":"2026-05-10","employed":"2026-05-18","candidate":"Зорин Николай","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":37,"offer":"2026-05-08","employed":"2026-05-20","candidate":"Педан Захар","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-03-31","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":37,"offer":"2026-05-08","employed":"2026-05-20","candidate":"Маммадов Ехтибар","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Слесарь-ремонтник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-12","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":7,"offer":"2026-05-12","employed":"2026-05-20","candidate":"Пшеничний  Артем","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-04-27","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":18,"offer":"2026-05-08","employed":"2026-05-20","candidate":"Алексей Зезюля","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Мастер СМР","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-04-29","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":16,"offer":"2026-05-13","employed":"2026-05-20","candidate":"Сергей Исаков","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Порт Певек","unit":"Управление развития и капстроительства","vacancy":"Руководитель управления развития и капстроительства","country":"Россия","location":"Певек","customer":"Тихомиров Александер","start":"2026-01-13","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":104,"offer":"2026-04-13","employed":"2026-06-05","candidate":"Гладишев Максим","grade":"Specialist","fee":null,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-01","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":24,"offer":"2026-05-29","employed":"2026-06-03","candidate":"Долгополов Игор","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-01","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":19,"offer":"2026-05-19","employed":"2026-05-27","candidate":"Александер Кузнетсов","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Крановщик","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-04","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":23,"offer":"2026-05-20","employed":"2026-06-03","candidate":"Виталий Сидоренко","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Слесарь-ремонтник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-12","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":14,"offer":"2026-05-25","employed":"2026-05-29","candidate":"Бровкин Евгений","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Порт Певек","unit":"Общежитие","vacancy":"Специалист по обслуживанию спецодежды","country":"Россия","location":"Певек","customer":"Карелин Константин","start":"2026-04-10","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":38,"offer":"2026-04-27","employed":"2026-06-02","candidate":"Алеиникова Лариса","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Techinvest","unit":"Коммерческий отдел","vacancy":"Менеджер по развитию бизнеса (BDM)","country":"Россия","location":"Москва","customer":"Борис Сердитов","start":"2025-10-28","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":156,"offer":"2026-05-28","employed":"2026-06-02","candidate":"Ничипорчик Анатолий","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-18","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":2,"offer":"2026-05-18","employed":"2026-05-19","candidate":"Денис Юрлов","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Менеджер по ОТ и ТБ (HSE)","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-04-30","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":30,"offer":"2026-05-07","employed":"2026-06-10","candidate":"Гилмутдинова Гулназ","grade":"Specialist","fee":null,"seg":"prof"},{"employer":"Порт Певек","unit":"Администрация","vacancy":"Руководитель направления инвестиций","country":"Россия","location":"Москва","customer":"Анатолий Седов","start":"2026-03-23","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":57,"offer":"2026-06-08","employed":"2026-06-09","candidate":"Зилбер Владимир","grade":"Manager","fee":null,"seg":"prof"},{"employer":"Порт Певек","unit":"Департамент финансовых операций","vacancy":"Финансовый контролёр","country":"Россия","location":"Удалённо","customer":"Шамил Миш","start":"2026-04-01","status":"JO Accepted","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":66,"offer":"2026-06-03","employed":"2026-07-01","candidate":"Абдулхакова Ангелина","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Порт Певек","unit":"Управление развития и капстроительства","vacancy":"Геодезист","country":"Россия","location":"Певек","customer":"Тихомиров Александер","start":"2026-02-17","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":92,"offer":"2026-06-15","employed":"2026-06-24","candidate":"Степанов Александер","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Разнорабочий","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":2,"offer":"2026-06-06","employed":"2026-06-08","candidate":"Денис Андрасюк","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Разнорабочий","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-05","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":1,"offer":"2026-06-05","employed":"2026-06-06","candidate":"Олег Баринов","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-11","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":9,"offer":"2026-06-15","employed":"2026-06-23","candidate":"Хуранов Хамидби","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-11","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":9,"offer":"2026-06-17","employed":"2026-06-23","candidate":"Павел Шестаков","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Разнорабочий","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-06","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":4,"offer":"2026-06-06","employed":"2026-06-11","candidate":"Артем Трегубенко","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Уборщица","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-14","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":1,"offer":"2026-06-14","employed":"2026-06-15","candidate":"Татиана Хомякова","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-16","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":6,"offer":"2026-06-16","employed":"2026-06-23","candidate":"Григорий Чубатов","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-17","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":5,"offer":"2026-06-17","employed":"2026-06-23","candidate":"Павел Гайдамак","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-16","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":6,"offer":"2026-06-16","employed":"2026-06-23","candidate":"Мутиленко Валерий","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-16","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":6,"offer":"2026-06-19","employed":"2026-06-23","candidate":"Коломиетс Николай","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Водитель","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-16","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":6,"offer":"2026-06-18","employed":"2026-06-23","candidate":"Алексей Ханин","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Разнорабочий","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-10","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":3,"offer":"2026-06-10","employed":"2026-06-12","candidate":"Шевченко Игнат","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Разнорабочий","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-25","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":2,"offer":"2026-06-25","employed":"2026-06-26","candidate":"Максим Глухов","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Электрик","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-03","status":"JO Accepted","manager":"Любовь","source":"Коллеги","referral":null,"period":23,"offer":"2026-06-04","employed":"2026-07-03","candidate":"Легостаев Денис","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-17","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":15,"offer":"2026-06-29","employed":"2026-07-07","candidate":"Александер Шмелев","grade":"Specialist","fee":97000,"seg":"mass"},{"employer":"Techinvest","unit":"Коммерческий отдел","vacancy":"Менеджер по договорам","country":"Россия","location":"Москва","customer":"Борис Сердитов","start":"2026-06-04","status":"Employed","manager":"Аэлита","source":"Внутр. поиск (Аэлита)","referral":null,"period":19,"offer":"2026-06-29","employed":"2026-06-30","candidate":"Олег Захаров","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Techinvest","unit":"Коммерческий отдел","vacancy":"Бухгалтер","country":"Россия","location":"Москва","customer":"Зотов Иля","start":"2026-06-17","status":"Employed","manager":"Латаура","source":"Внутр. поиск (Латаура)","referral":null,"period":3,"offer":"2026-06-18","employed":"2026-06-19","candidate":"Анна Таллерова","grade":"Specialist","fee":97000,"seg":"prof"},{"employer":"Northern Engineering Solutions","unit":"—","vacancy":"Монтажник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-06-24","status":"Employed","manager":"Любовь","source":"Коллеги","referral":null,"period":10,"offer":"2026-06-24","employed":"2026-07-07","candidate":"Вячеслав Шегуров","grade":"Specialist","fee":null,"seg":"mass"},{"employer":"Northern Engineering Solutions","unit":"Транспортный отдел","vacancy":"Слесарь-ремонтник","country":"Россия","location":"Певек","customer":"Алтунин Иван","start":"2026-05-24","status":"Employed","manager":"Любовь","source":"Внутр. поиск (Любовь)","referral":null,"period":32,"offer":"2026-07-02","employed":"2026-07-07","candidate":"Южаков Николай","grade":"Specialist","fee":97000,"seg":"mass"}],"search":[{"employer":"WIM","group":"wim","vacancy":"Директор СНГ","country":"СНГ","location":"Сингапур","grade":"C4","customer":"Елена Якубовская","n":1,"start":"2026-05-29","status":"Security Check","manager":"Надежда","days":27,"comment":"Шилин Слава","priority":2},{"employer":"WIM","group":"wim","vacancy":"Руководитель биллинга и взысканий","country":"Россия","location":"Москва","grade":"С3","customer":"Владислав Пашнев","n":1,"start":"2026-05-13","status":"Security Check","manager":"Надежда","days":39,"comment":"Федор Беляков","priority":1},{"employer":"WIM","group":"wim","vacancy":"Менеджер по биллингу","country":"Россия","location":"Москва","grade":"C4","customer":"Владислав Пашнев","n":3,"start":"2026-05-13","status":"Search","manager":"Надежда","days":39,"comment":"Поиск кандидата","priority":1},{"employer":"Порт Певек","group":"cl","vacancy":"Автоэлектрик","country":"Россия","location":"Певек","grade":"ND","customer":"Карелин Константин","n":1,"start":"2025-04-02","status":"Search","manager":"Любовь","days":329,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"WIM","group":"wim","vacancy":"Специалист по финансовой отчётности","country":"Россия","location":"Москва","grade":"C5","customer":"Василченко Елизавета","n":1,"start":"2026-01-12","status":"Hold","manager":"Латаура","days":null,"comment":"Пауза с 4.05","priority":3},{"employer":"VERUM","group":"wim","vacancy":"Старший юрист","country":"Казахстан","location":"Kazakhstan","grade":"ND","customer":"Тиленбаев Улан","n":1,"start":"2026-04-09","status":"Search","manager":"Любовь","days":63,"comment":"Муканбетов Азим, Абай Жангабилов","priority":1},{"employer":"VERUM","group":"wim","vacancy":"Младший юрист","country":"Казахстан","location":"Kazakhstan","grade":"ND","customer":"Тиленбаев Улан","n":1,"start":"2026-04-09","status":"Search","manager":"Любовь","days":63,"comment":"Магай Екатерина, Лее Юри","priority":1},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Security Check","manager":"Любовь/Латаура","days":29,"comment":"Сергей Рижков","priority":1,"seg":"mass"},{"employer":"WIM","group":"wim","vacancy":"Менеджер проекта","country":"Россия","location":"Алматы","grade":"С5","customer":"Елена Якубовская","n":1,"start":"2026-02-10","status":"Search","manager":"Надежда","days":null,"comment":"Пауза с 27.03-29.05","priority":2},{"employer":"WIM","group":"wim","vacancy":"Налоговый менеджер","country":"Россия","location":"Алматы","grade":"С5","customer":"Елена Якубовская","n":1,"start":"2026-05-29","status":"Search","manager":"Надежда","days":27,"comment":"Поиск кандидата","priority":2},{"employer":"Порт Певек","group":"cl","vacancy":"Инженер ВЭТ","country":"Россия","location":"Певек","grade":"ND","customer":"Александр Тихомиров","n":1,"start":"2026-01-20","status":"Search","manager":"Любовь","days":201,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"GA","group":"cl","vacancy":"Специалист по документообороту","country":"Россия","location":"Москва","grade":"С5","customer":"Артур Смирнов","n":1,"start":"2026-03-13","status":"Search","manager":"Латаура","days":82,"comment":"Морозова Ксения, Наталя Бергер, Виктория Бурова","priority":1,"seg":"prof"},{"employer":"Northern Engineering Solutions","group":"cl","vacancy":"Оператор спецтехники","country":"Россия","location":"Певек","grade":"ND","customer":"Алтунин Иван","n":1,"start":"2026-03-31","status":"Search","manager":"Любовь","days":1,"comment":"Поиск кандидата","priority":2,"seg":"mass"},{"employer":"GA","group":"cl","vacancy":"Специалист HelpDesk","country":"Россия","location":"Москва","grade":"С5","customer":"Виктор Прокопчук","n":1,"start":"2026-03-25","status":"Hold","manager":"Латаура","days":74,"comment":"Пауза с 22.06","priority":1,"seg":"prof"},{"employer":"Порт Певек","group":"cl","vacancy":"Финансовый контролёр","country":"Россия","location":"Удалённо","grade":"C5","customer":"Шамил Миш","n":1,"start":"2026-04-01","status":"Hiring","manager":"Аэлита","days":69,"comment":"Абдулхакова Ангелина","priority":1,"seg":"prof"},{"employer":"WIM","group":"wim","vacancy":"Бухгалтер","country":"Россия","location":"Москва","grade":"C5","customer":"Юлия Василева","n":1,"start":"2026-04-20","status":"Hiring","manager":"Латаура","days":56,"comment":"Наталя Борордина","priority":1},{"employer":"KZM","group":"cl","vacancy":"Директор по строительству порта","country":"Россия","location":"Певек","grade":"ND","customer":"Роман Елиасов","n":1,"start":"2026-03-25","status":"Search","manager":"Надежда","days":74,"comment":"Евгений Хлупенков, Зузин Игор, Ефремов Даниил","priority":1,"seg":"prof"},{"employer":"WIM","group":"wim","vacancy":"Старший юрист","country":"Россия","location":"Москва","grade":"C5","customer":"Чинетов Азамат","n":1,"start":"2026-05-19","status":"Search","manager":"Надежда","days":35,"comment":"Станислав Огородников, Северухин Александер, Бунина Надежда","priority":1},{"employer":"WIM","group":"wim","vacancy":"Специалист проектной администрации","country":"Россия","location":"Москва","grade":"C5","customer":"Чинетов Азамат","n":1,"start":"2026-04-30","status":"Search","manager":"Аэлита","days":48,"comment":"Акбаян Турарбекова","priority":2},{"employer":"Northern Engineering Solutions","group":"cl","vacancy":"Слесарь-ремонтник","country":"Россия","location":"Певек","grade":"ND","customer":"Алтунин Иван","n":1,"start":"2026-06-25","status":"Search","manager":"Любовь","days":9,"comment":"Владимир Фролов","priority":2,"seg":"mass"},{"employer":"NP","group":"cl","vacancy":"Младший финансовый контролёр","country":"Россия","location":"Москва","grade":"C5","customer":"Екатерина Воскресенская","n":1,"start":"2026-05-19","status":"Search","manager":"Аэлита","days":35,"comment":"Демянова Валерия, Боровкова Елизавета","priority":1,"seg":"prof"},{"employer":"Techinvest","group":"cl","vacancy":"Директор по морским перевозкам","country":"Россия","location":"Москва","grade":"С3","customer":"Борис Сердитов","n":1,"start":"2026-06-01","status":"Hold","manager":"Аэлита","days":26,"comment":"Пауза с 08.06 - 22.06 Аксянов Андрей, Болшаков Александр, Авакиан Артем, Тисленко Дмитри","priority":1,"seg":"prof"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Дмитрий Ибулаев","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Екимовских Евгений","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Дмитрий Сластнои","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Максим Поляков","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Евгений Ляшик","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Михаил Прокушев","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"ЧОП «ГА»","group":"cl","vacancy":"Охранник","country":"Россия","location":"Певек","grade":"ND","customer":"Олег Рябов","n":1,"start":"2026-05-27","status":"Search","manager":"Любовь/Латаура","days":29,"comment":"Поиск кандидата","priority":1,"seg":"mass"},{"employer":"Northern Engineering Solutions","group":"cl","vacancy":"Механик по ремонту техники","country":"Россия","location":"Певек","grade":"ND","customer":"Алтунин Иван","n":1,"start":"2026-06-01","status":"Security Check","manager":"Любовь","days":26,"comment":"Пидяшов Виктор","priority":2,"seg":"mass"},{"employer":"Порт Певек","group":"cl","vacancy":"Токарь","country":"Россия","location":"Певек","grade":"ND","customer":"Ламанов Юри","n":1,"start":"2025-06-03","status":"Search","manager":"Любовь","days":285,"comment":"Дмитрий Печенкин","priority":1,"seg":"mass"},{"employer":"Techinvest","group":"cl","vacancy":"Логист","country":"Россия","location":"Москва","grade":"ND","customer":"Борис Сердитов","n":1,"start":"2026-06-02","status":"Hold","manager":"Аэлита","days":25,"comment":"Пауза с 08.06 Мисов Иван","priority":1,"seg":"mass"},{"employer":"Techinvest","group":"cl","vacancy":"Супервайзер участка","country":"Россия","location":"Москва","grade":"ND","customer":"Борис Сердитов","n":1,"start":"2026-06-02","status":"Hold","manager":"Аэлита","days":25,"comment":"Пауза с 08.06 Нестеренко Сергей","priority":1,"seg":"prof"},{"employer":"Порт Певек","group":"cl","vacancy":"Диспетчер-техник","country":"Россия","location":"Певек","grade":"C5","customer":"Ламанов Юри","n":1,"start":"2026-06-04","status":"Search","manager":"Латаура","days":23,"comment":"Анастасия Валтусова,  Клавдия Берсенева","priority":null,"seg":"mass"},{"employer":"GA","group":"cl","vacancy":"Инженер ТСО (охранное оборудование)","country":"Россия","location":"Певек","grade":"ND","customer":"Синатос Максим","n":1,"start":"2026-06-16","status":"Security Check","manager":"Любовь","days":7,"comment":"Толчеев Сергей","priority":2,"seg":"mass"},{"employer":"WIM","group":"wim","vacancy":"Специалист проектной администрации","country":"Россия","location":"Москва","grade":"C5","customer":"Чинетов Азамат","n":1,"start":"2026-06-29","status":"Search","manager":"Аэлита","days":6,"comment":"Поиск кандидата","priority":1},{"employer":"WIM KZ","group":"wim","vacancy":"Инвестиционный аналитик","country":"Казахстан","location":"Алматы","grade":"C5","customer":"Мадияр Куздбаев","n":1,"start":"2026-06-26","status":"Search","manager":"Латаура","days":7,"comment":"Поиск кандидата","priority":2},{"employer":"WIM","group":"wim","vacancy":"Инвестиционный аналитик","country":"Россия","location":"Москва","grade":"C5","customer":"Антон Мингалев","n":1,"start":"2026-06-26","status":"Search","manager":"Латаура","days":7,"comment":"Поиск кандидата","priority":2},{"employer":"WIM","group":"wim","vacancy":"Специалист по отчётности UK/Malta","country":"Россия","location":"Москва","grade":"C5","customer":"Василченко Елизавета","n":1,"start":"2026-06-23","status":"Search","manager":"Латаура","days":10,"comment":"Андрей Мирончук","priority":2},{"employer":"Порт Певек","group":"cl","vacancy":"Водитель","country":"Россия","location":"Певек","grade":"ND","customer":"Ламанов Юри","n":1,"start":"2025-06-29","status":"Search","manager":"Любовь","days":8,"comment":"Поиск кандидата","priority":1,"seg":"mass"}],"mgmt":{"recruiter_block":{"Любовь":{"active_internal":2,"active_mass":8,"active_prof":0,"active_total":10,"closed_q1_2026":13,"closed_2026":70,"median_days":23.0},"Латаура":{"active_internal":4,"active_mass":1,"active_prof":1,"active_total":6,"closed_q1_2026":3,"closed_2026":15,"median_days":38},"Надежда":{"active_internal":8,"active_mass":0,"active_prof":1,"active_total":9,"closed_q1_2026":3,"closed_2026":7,"median_days":45},"Любовь/Латаура":{"active_internal":0,"active_mass":38,"active_prof":0,"active_total":38,"closed_q1_2026":0,"closed_2026":0,"median_days":null},"Аэлита":{"active_internal":2,"active_mass":0,"active_prof":2,"active_total":4,"closed_q1_2026":7,"closed_2026":15,"median_days":50}},"hold_count":5,"mass_prof_summary":{"mass":{"count":68,"closed":66,"median_days":19.0},"prof":{"count":18,"closed":17,"median_days":48}},"internal_summary":{"count":29,"closed":22,"median_days":50.5},"grade_median":{"C1":{"median_days":51,"n":1},"C2":{"median_days":45,"n":1},"C3":{"median_days":57,"n":3},"C4":{"median_days":44,"n":5},"C5":{"median_days":45.5,"n":12}},"hm_median":{"Василченко Елизавета":{"median_days":107.0,"n":2},"Тихомиров Александер":{"median_days":98.0,"n":2},"Борис Сердитов":{"median_days":87.5,"n":2},"Карелин Константин":{"median_days":77,"n":3},"Елена Егорова":{"median_days":69.5,"n":2},"Владлена Буреева":{"median_days":55.5,"n":2},"Владислав Пашнев":{"median_days":40.0,"n":2},"Вячеслав Доманин":{"median_days":38,"n":3},"Олег Рябов":{"median_days":23.5,"n":4},"Алтунин Иван":{"median_days":18.5,"n":60}},"country_median":{"Россия":{"median_days":30.5,"n":102},"ОАЭ":{"median_days":55.0,"n":2},"Казахстан":{"median_days":63,"n":3}},"quality_counts":{"EE":4,"ME":6,"left_before_review":2,"pending":17},"quality_by_recruiter":{"Латаура":{"EE":2},"Аэлита":{"EE":1,"ME":3},"Надежда":{"ME":3},"Любовь":{"EE":1}},"source_for_exceed":{"Реферал":1,"Внутр. поиск (Аэлита)":1,"Внутр. поиск (Латаура)":1,"Внутр. поиск (Любовь)":1},"source_for_meets":{"Внутр. поиск (Надежда)":2,"Реферал":1,"Внутр. поиск (Аэлита)":2,"Внутр. поиск (Латаура)":1},"pnl":{"fee_total":2866828,"positions_with_fee":27,"avg_fee":106179,"fee_by_recruiter":{"Любовь":1896828.0,"Латаура":582000.0,"Аэлита":388000.0},"fee_by_client":{"Northern Engineering Solutions":873000.0,"Порт Певек":873000.0,"GA":441828.0,"ЧОП «Гелион»":388000.0,"Techinvest":291000.0},"note":"Только доходная часть (placement fee). Себестоимость подбора (ФОТ рекрутёров, оверхед) — со стороны Николая, пока не включена."}}};
+const MGMT = DATA.mgmt || {};
+
+const ST_HIRED = {
+  'Employed':{l:'Работает',c:'b-emp',k:'emp'},
+  'JO':{l:'Оффер (JO)',c:'b-jo',k:'jo'},
+  'JO Accepted':{l:'Оффер принят',c:'b-jo',k:'jo'},
+  'Leave':{l:'Уволился',c:'b-leave',k:'leave'},
+  'has not arrived':{l:'Не вышел',c:'b-leave',k:'leave'}
+};
+const ST_SEARCH = {
+  'Search':{l:'Поиск',c:'b-search',col:'#4A7FDE'},
+  'Security Check':{l:'Проверка СБ',c:'b-sec',col:'#D99A2B'},
+  'Hiring':{l:'Оформление',c:'b-hire',col:'#9B8CE0'},
+  'Hold':{l:'Пауза',c:'b-hold',col:'#8A97B0'}
+};
+const ONB_LABEL = {done:'✓',left:'✕',pending:'···',future:''};
+const ONB_CLASS = {done:'d-done',left:'d-left',pending:'d-act',future:'d-wait'};
+const ONB_TITLE = {done:'Пройден',left:'Ушёл до этапа',pending:'В процессе',future:'Ещё не наступил'};
+const QUALITY_LABEL = {EE:'Превышает ожидания', ME:'Соответствует ожиданиям', left_before_review:'Ушёл до оценки', pending:'Ожидает оценки'};
+const QUALITY_COLOR = {EE:'#3FAE7A', ME:'#4A7FDE', left_before_review:'#E2707A', pending:'#C0CEEA'};
+const MONTHS=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+const fmtD = s => s ? s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4) : '—';
+const esc = s => (s===null||s===undefined||s==='') ? '—' : s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+let view='wim', hiredFilter='all', searchFilter='all', q='';
+
+function hires(){ return view==='wim' ? DATA.wim : DATA.clients; }
+function searches(){ return DATA.search.filter(s=>s.group===view); }
+
+/* HERO */
+(function(){
+  const tw=DATA.wim.length, tc=DATA.clients.length;
+  const act=DATA.search.reduce((a,s)=>a+(s.n||1),0);
+  document.getElementById('heroStats').innerHTML = [
+    [tw+tc,'нанято в 2026'],[tw,'Whitecliff'],[tc,'клиенты'],[act,'активных позиций']
+  ].map(x=>`<div class="hstat"><div class="hstat-v">${x[0]}</div><div class="hstat-l">${x[1]}</div></div>`).join('');
+  document.getElementById('cnt-wim').textContent=tw;
+  document.getElementById('cnt-cl').textContent=tc;
+})();
+
+/* count-up animation for KPI numbers */
+function countUp(el, target, suffix){
+  suffix = suffix||'';
+  const isFloat = String(target).includes(',') || String(target).includes('.');
+  const numTarget = parseFloat(String(target).replace(',','.').replace(/[^\d.-]/g,'')) || 0;
+  const dur=1000, start=performance.now();
+  function step(now){
+    const p=Math.min(1,(now-start)/dur); const eased=1-Math.pow(1-p,3);
+    const val = numTarget*eased;
+    el.textContent = (isFloat ? val.toFixed(2).replace('.',',') : Math.round(val)) + suffix;
+    if(p<1) requestAnimationFrame(step); else el.textContent = target+suffix;
+  }
+  requestAnimationFrame(step);
+}
+function animateKpiNumbers(container){
+  container.querySelectorAll('.kpi-value').forEach(el=>{
+    const raw = el.textContent.trim();
+    const m = raw.match(/^([\d.,]+)(.*)$/);
+    if(!m) return;
+    const target = m[1]; const suffix = m[2]||'';
+    el.textContent = '0'+suffix;
+    countUp(el, target, suffix);
+  });
+}
+
+/* KPI */
+function renderKPI(){
+  const h=hires(), s=searches();
+  const emp=h.filter(x=>x.status==='Employed');
+  const jo=h.filter(x=>x.status==='JO'||x.status==='JO Accepted');
+  const left=h.filter(x=>x.status==='Leave'||x.status==='has not arrived');
+  const periods=emp.map(x=>x.period).filter(x=>typeof x==='number');
+  const avg=periods.length?Math.round(periods.reduce((a,b)=>a+b,0)/periods.length):0;
+  const actPos=s.reduce((a,x)=>a+(x.n||1),0);
+  const turnover = h.length ? Math.round(left.length/h.length*100) : 0;
+  const cards=[
+    {c:'k1',label:'Нанято в 2026',v:h.length,sub:`Трудоустроено: ${emp.length} · На этапе оффера: ${jo.length}`},
+    {c:'k2',label:'Средний срок поиска',v:avg+' дн.',sub:'Рабочие дни, по закрытым позициям'},
+    {c:'k3',label:'Активные поиски',v:actPos,sub:`Вакансий в работе: ${s.length}`},
+    {c:'k4',label:'Уходы / не вышли',v:left.length,sub:h.length?`Текучесть кадров: ${turnover}%`:''}
+  ];
+  if(view==='cl'){
+    const fee=DATA.clients.reduce((a,x)=>a+(x.fee||0),0);
+    cards.push({c:'k5',label:'Placement fee',v:(fee/1e6).toFixed(2).replace('.',',')+' млн ₽',sub:'Сумма по закрытым позициям'});
+  } else {
+    const scored=h.filter(x=>x.rating && x.rating.state==='scored');
+    cards.push({c:'k5',label:'Оценено после адаптации',v:scored.length,sub:`Из общего числа наймов: ${h.length}`});
+  }
+  document.getElementById('kpiGrid').innerHTML = cards.map(k=>
+    `<div class="kpi ${k.c} visible"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.v}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+}
+
+/* DONUT */
+function renderDonut(){
+  const s=searches();
+  const counts={};
+  s.forEach(x=>{const k=x.status||'Search';counts[k]=(counts[k]||0)+(x.n||1)});
+  const total=Object.values(counts).reduce((a,b)=>a+b,0);
+  document.getElementById('donutTotal').textContent=total;
+  const R=58, C=2*Math.PI*R;
+  let off=0, circles='';
+  const order=['Search','Security Check','Hiring','Hold'];
+  order.forEach(k=>{
+    const n=counts[k]||0; if(!n)return;
+    const len=n/total*C;
+    circles+=`<circle cx="80" cy="80" r="${R}" stroke="${ST_SEARCH[k].col}" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}"></circle>`;
+    off+=len;
+  });
+  document.getElementById('donutSvg').innerHTML=circles;
+  document.querySelectorAll('#donutSvg circle').forEach(c=>{
+    const full = c.getAttribute('stroke-dasharray');
+    c.setAttribute('stroke-dasharray', `0 ${C}`);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.setAttribute('stroke-dasharray', full); }));
+  });
+  document.getElementById('donutLegend').innerHTML=order.filter(k=>counts[k]).map(k=>
+    `<div class="dl-item"><span class="dl-dot" style="background:${ST_SEARCH[k].col}"></span>${ST_SEARCH[k].l}<span class="dl-n">${counts[k]}</span></div>`).join('');
+}
+
+/* MONTHS */
+function renderMonths(){
+  const h=hires().filter(x=>x.employed);
+  const by={};
+  h.forEach(x=>{const m=+x.employed.slice(5,7);by[m]=(by[m]||0)+1});
+  const maxM=Math.max(7,...Object.keys(by).map(Number));
+  const max=Math.max(1,...Object.values(by));
+  let html='';
+  for(let m=1;m<=maxM;m++){
+    const n=by[m]||0;
+    html+=`<div class="mcol"><div class="mbar" data-h="${n/max*100}"><b>${n||''}</b></div><div class="mlabel">${MONTHS[m-1]}</div></div>`;
+  }
+  const el=document.getElementById('monthChart');
+  el.innerHTML=html;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    el.querySelectorAll('.mbar').forEach(b=>b.style.height=Math.max(2,+b.dataset.h)+'%');
+  }));
+}
+
+/* HORIZONTAL BARS */
+function hbars(el,map,alt){
+  const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(1,...entries.map(e=>e[1]));
+  el.innerHTML=entries.map(([k,v])=>
+    `<div class="bud-row"><div class="bud-name" title="${esc(k)}">${esc(k)}</div>
+     <div class="bud-track"><div class="bud-fill${alt?' alt':''}" data-w="${v/max*100}"><span>${v}</span></div></div></div>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    el.querySelectorAll('.bud-fill').forEach(b=>b.style.width=Math.max(8,+b.dataset.w)+'%');
+  }));
+}
+function renderBars(){
+  const h=hires();
+  const byMgr={}, bySrc={}, byEmp={};
+  h.forEach(x=>{ if(x.manager)byMgr[x.manager]=(byMgr[x.manager]||0)+1;
+    if(x.source)bySrc[x.source]=(bySrc[x.source]||0)+1;
+    byEmp[x.employer]=(byEmp[x.employer]||0)+1; });
+  hbars(document.getElementById('barLeft'), byMgr, false);
+  if(view==='cl'){
+    document.getElementById('barRightTitle').textContent='Наём по компаниям';
+    hbars(document.getElementById('barRight'), byEmp, true);
+  }else{
+    document.getElementById('barRightTitle').textContent='Источники кандидатов';
+    hbars(document.getElementById('barRight'), bySrc, true);
+  }
+}
+
+/* onboarding dots + rating */
+function onbDots(x){
+  if(view!=='wim') return '';
+  const steps=[['14',x.day14],['30',x.day30],['60',x.day60],['75',x.day75],['90',x.day90]];
+  return `<div class="onb">${steps.map(([l,d])=>{
+    const st=d?d.state:'future';
+    return `<span class="dot ${ONB_CLASS[st]}" title="${l} дн. — ${ONB_TITLE[st]}">${ONB_LABEL[st]||l}</span>`;
+  }).join('')}</div>`;
+}
+function ratingCell(x){
+  if(view!=='wim' || !x.rating) return '—';
+  const r=x.rating;
+  if(r.state==='scored'){
+    const filled=r.score+1;
+    let dots=''; for(let i=1;i<=5;i++) dots+=`<i class="${i<=filled?'on'+(r.code==='ME'?' me':''):'off'}"></i>`;
+    return `<div class="rate-dots" title="${r.code==='EE'?'Превышает ожидания':'Соответствует ожиданиям'}">${dots}</div>`;
+  }
+  if(r.state==='left') return '<span class="rate-pending">ушёл до оценки</span>';
+  return '<span class="rate-pending">после 90 дн.</span>';
+}
+
+/* HIRED TABLE */
+function renderHiredTabs(){
+  const h=hires();
+  const cnt=k=>h.filter(x=>(ST_HIRED[x.status]||{}).k===k).length;
+  const tabs=[['all','Все',h.length],['emp','Работает',cnt('emp')],['jo','Оффер',cnt('jo')],['leave','Уход / не вышел',cnt('leave')]];
+  document.getElementById('hiredTabs').innerHTML =
+    tabs.map(t=>`<div class="ftab${hiredFilter===t[0]?' on':''}" data-f="${t[0]}">${t[1]} <span class="cnt">${t[2]}</span></div>`).join('') +
+    `<input class="search-box" id="qbox" placeholder="Поиск: кандидат, вакансия, компания…" value="${esc(q)}">`;
+  document.querySelectorAll('#hiredTabs .ftab').forEach(el=>el.onclick=()=>{hiredFilter=el.dataset.f;renderHiredBody()});
+  const box=document.getElementById('qbox');
+  box.oninput=()=>{q=box.value;renderHiredBody()};
+}
+function renderHiredHead(){
+  const common='<th>Кандидат</th><th>Вакансия</th><th>Локация</th><th>Источник</th><th>Выход</th><th style="text-align:center">Срок, дн.</th><th>Рекрутёр</th><th>Статус</th>';
+  const extra = view==='wim' ? '<th>Грейд</th>' : '<th>Компания</th>';
+  const tail = view==='wim' ? '<th>Онбординг</th><th>Адаптация</th>' : '';
+  document.getElementById('hiredHead').innerHTML='<tr>'+extra+common+tail+'</tr>';
+}
+function renderHiredBody(){
+  const ql=q.trim().toLowerCase();
+  let rows=hires().filter(x=>{
+    if(hiredFilter!=='all' && (ST_HIRED[x.status]||{}).k!==hiredFilter) return false;
+    if(ql){
+      const hay=[x.candidate,x.vacancy,x.employer,x.customer,x.manager,x.location].join(' ').toLowerCase();
+      if(!hay.includes(ql)) return false;
+    }
+    return true;
+  });
+  rows.sort((a,b)=>(b.employed||'')<(a.employed||'')?-1:1);
+  document.getElementById('hiredBody').innerHTML=rows.map(x=>{
+    const st=ST_HIRED[x.status]||{l:x.status,c:'b-hold'};
+    const extra = view==='wim' ? `<td class="num">${esc(x.grade)}</td>` : `<td>${esc(x.employer)}</td>`;
+    const tail = view==='wim' ? `<td>${onbDots(x)}</td><td>${ratingCell(x)}</td>` : '';
+    return `<tr>${extra}
+      <td class="cand">${esc(x.candidate)}</td>
+      <td>${esc(x.vacancy)}${x.unit?`<div class="vac-sub">${esc(x.unit)}</div>`:''}</td>
+      <td>${esc(x.location)}</td>
+      <td>${esc(x.source)}</td>
+      <td>${fmtD(x.employed)}</td><td class="num">${typeof x.period==='number'?x.period:'—'}</td>
+      <td>${esc(x.manager)}</td><td><span class="badge ${st.c}">${st.l}</span></td>${tail}</tr>`;
+  }).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">Ничего не найдено</td></tr>';
+}
+function renderHiredTitle(){ document.getElementById('hiredTitle').textContent = (view==='wim'?'Нанятые сотрудники · Whitecliff · 2026':'Нанятые сотрудники · Клиенты · 2026'); }
+function renderHired(){renderHiredTitle();renderHiredTabs();renderHiredHead();renderHiredBody();}
+
+/* SEARCH TABLE */
+function renderSearchTabs(){
+  const s=searches();
+  const cnt=k=>s.filter(x=>x.status===k).length;
+  const tabs=[['all','Все',s.length],['Search','Поиск',cnt('Search')],['Security Check','Проверка СБ',cnt('Security Check')],['Hiring','Оформление',cnt('Hiring')],['Hold','Пауза',cnt('Hold')]];
+  document.getElementById('searchTabs').innerHTML=tabs.filter(t=>t[0]==='all'||t[2]>0).map(t=>
+    `<div class="ftab${searchFilter===t[0]?' on':''}" data-f="${t[0]}">${t[1]} <span class="cnt">${t[2]}</span></div>`).join('');
+  document.querySelectorAll('#searchTabs .ftab').forEach(el=>el.onclick=()=>{searchFilter=el.dataset.f;renderSearchBody()});
+}
+function renderSearchBody(){
+  let rows=searches().filter(x=>searchFilter==='all'||x.status===searchFilter);
+  rows.sort((a,b)=>(a.priority||9)-(b.priority||9)||(b.days||0)-(a.days||0));
+  document.getElementById('searchBody').innerHTML=rows.map(x=>{
+    const st=ST_SEARCH[x.status]||{l:x.status,c:'b-hold'};
+    const p=x.priority?`<span class="pri p${Math.min(3,x.priority)}">${x.priority}</span>`:'—';
+    return `<tr><td>${esc(x.employer)}</td>
+      <td class="cand">${esc(x.vacancy)}</td>
+      <td>${esc(x.location)}</td><td>${esc(x.customer)}</td>
+      <td class="num">${x.n||1}</td><td>${fmtD(x.start)}</td>
+      <td class="num">${typeof x.days==='number'?x.days:'—'}</td>
+      <td><span class="badge ${st.c}">${st.l}</span></td>
+      <td>${esc(x.manager)}</td><td style="text-align:center">${p}</td></tr>`;
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">Нет вакансий</td></tr>';
+}
+function renderSearch(){renderSearchTabs();renderSearchBody();}
+
+/* click row -> modal (extra detail) */
+document.getElementById('hiredBody').addEventListener('click', e=>{
+  const tr = e.target.closest('tr'); if(!tr) return;
+  const idx = [...tr.parentNode.children].indexOf(tr);
+  const rows = currentHiredRows(); const x = rows[idx]; if(x) openHiredModal(x);
+});
+document.getElementById('searchBody').addEventListener('click', e=>{
+  const tr = e.target.closest('tr'); if(!tr) return;
+  const idx = [...tr.parentNode.children].indexOf(tr);
+  const rows = currentSearchRows(); const x = rows[idx]; if(x) openSearchModal(x);
+});
+function currentHiredRows(){
+  const ql=q.trim().toLowerCase();
+  let rows=hires().filter(x=>{
+    if(hiredFilter!=='all' && (ST_HIRED[x.status]||{}).k!==hiredFilter) return false;
+    if(ql){ const hay=[x.candidate,x.vacancy,x.employer,x.customer,x.manager,x.location].join(' ').toLowerCase(); if(!hay.includes(ql)) return false; }
+    return true;
+  });
+  rows.sort((a,b)=>(b.employed||'')<(a.employed||'')?-1:1);
+  return rows;
+}
+function currentSearchRows(){
+  let rows=searches().filter(x=>searchFilter==='all'||x.status===searchFilter);
+  rows.sort((a,b)=>(a.priority||9)-(b.priority||9)||(b.days||0)-(a.days||0));
+  return rows;
+}
+
+const overlay=document.getElementById('modalOverlay');
+const modalBody=document.getElementById('modalBody');
+function closeModal(){overlay.classList.remove('show');}
+document.getElementById('modalClose').onclick=closeModal;
+overlay.onclick=e=>{if(e.target===overlay) closeModal();};
+document.addEventListener('keydown', e=>{if(e.key==='Escape') closeModal();});
+
+function openHiredModal(x){
+  const st=ST_HIRED[x.status]||{l:x.status,c:'b-hold'};
+  let items = [
+    ['Компания', x.employer], ['Подразделение', x.unit||'—'],
+    ['Локация', x.location], ['Страна', x.country],
+    ['Заказчик', x.customer], ['Рекрутёр', x.manager],
+    ['Источник', x.source], ['Реферер', x.referral||'—'],
+    ['Старт поиска', fmtD(x.start)], ['Дата оффера', fmtD(x.offer)],
+    ['Дата выхода', fmtD(x.employed)], ['Срок поиска', (typeof x.period==='number'?x.period+' дн.':'—')],
+  ];
+  if(view==='wim'){ items.push(['Грейд', x.grade||'—']); items.push(['Страховка', x.insurance||'—']); }
+  else { items.push(['Грейд', x.grade||'—']); items.push(['Placement fee', x.fee?x.fee.toLocaleString('ru-RU')+' ₽':'—']); }
+  if(x.leave) items.push(['Дата увольнения', fmtD(x.leave)]);
+  let onbBlock='';
+  if(view==='wim'){
+    const steps=[['14 дн.',x.day14],['30 дн.',x.day30],['60 дн.',x.day60],['75 дн.',x.day75],['90 дн.',x.day90]];
+    onbBlock = `<div class="m-onb-title">Онбординг</div><div class="m-onb">` +
+      steps.map(([l,d])=>{ const s2=d?d.state:'future'; return `<div class="m-onb-step"><span class="dot ${ONB_CLASS[s2]}">${ONB_LABEL[s2]}</span><small>${l}</small></div>`; }).join('') + `</div>` +
+      `<div class="m-onb-title">Оценка адаптации</div>${ratingCell(x)}`;
+  }
+  modalBody.innerHTML = `
+    <div class="m-head"><div class="m-name">${esc(x.candidate)}</div><div class="m-vac">${esc(x.vacancy)} · <span class="badge ${st.c}">${st.l}</span></div></div>
+    <div class="m-grid">${items.map(([k,v])=>`<div class="m-item"><b>${k}</b><span>${esc(v)}</span></div>`).join('')}</div>
+    ${onbBlock}
+  `;
+  overlay.classList.add('show');
+}
+function openSearchModal(x){
+  const st=ST_SEARCH[x.status]||{l:x.status,c:'b-hold'};
+  const items=[
+    ['Компания', x.employer], ['Локация', x.location], ['Страна', x.country],
+    ['Заказчик', x.customer], ['Рекрутёр', x.manager], ['Количество', x.n||1],
+    ['Старт поиска', fmtD(x.start)], ['Дней в поиске', (typeof x.days==='number'?x.days:'—')],
+    ['Приоритет', x.priority||'—'], ['Грейд', x.grade||'—'],
+  ];
+  modalBody.innerHTML = `
+    <div class="m-head"><div class="m-name">${esc(x.vacancy)}</div><div class="m-vac">${esc(x.employer)} · <span class="badge ${st.c}">${st.l}</span></div></div>
+    <div class="m-grid">${items.map(([k,v])=>`<div class="m-item"><b>${k}</b><span>${esc(v)}</span></div>`).join('')}</div>
+    <div class="m-onb-title">Кандидаты / комментарий</div>
+    <div class="m-item" style="width:100%"><span>${esc(x.comment)}</span></div>
+  `;
+  overlay.classList.add('show');
+}
+
+/* ============ MANAGEMENT VIEW ============ */
+function renderRecruiterBody(){
+  const rb = MGMT.recruiter_block || {};
+  document.getElementById('holdNote').textContent = `На паузе (Hold), не входит в загрузку: ${MGMT.hold_count||0}`;
+  const rows = Object.entries(rb).sort((a,b)=>b[1].active_total-a[1].active_total);
+  document.getElementById('recruiterBody').innerHTML = rows.map(([name,r])=>`<tr>
+    <td class="cand">${esc(name)}</td>
+    <td class="num">${r.active_internal}</td>
+    <td class="num">${r.active_mass}</td>
+    <td class="num">${r.active_prof}</td>
+    <td class="num">${r.active_total}</td>
+    <td class="num">${r.closed_q1_2026}</td>
+    <td class="num">${r.closed_2026}</td>
+    <td class="num">${r.median_days??'—'}</td>
+  </tr>`).join('');
+}
+function renderMassProf(){
+  const s = MGMT.mass_prof_summary || {};
+  const internal = MGMT.internal_summary || {};
+  const mk = (label,obj,cls)=>`<div class="kpi ${cls} visible"><div class="kpi-label">${label}</div>
+    <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:6px">
+      <div><div class="kpi-value" style="font-size:24px">${obj.count}</div><div class="kpi-sub">наймов</div></div>
+      <div><div class="kpi-value" style="font-size:24px">${obj.closed}</div><div class="kpi-sub">закрыто</div></div>
+      <div><div class="kpi-value" style="font-size:24px;color:var(--accent)">${obj.median_days??'—'}</div><div class="kpi-sub">медиана,дн.</div></div>
+    </div></div>`;
+  document.getElementById('massProfCards').innerHTML =
+    mk('Whitecliff · внутренний рекрутинг', internal, 'k1') +
+    mk('Клиенты · массовый подбор', s.mass||{}, 'k4') +
+    mk('Клиенты · профподбор', s.prof||{}, 'k3');
+}
+function medianBar(entries, benchmark){
+  const max = Math.max(1,...entries.map(e=>e[1].median_days||0));
+  return entries.map(([k,v])=>{
+    const over = benchmark && v.median_days>benchmark;
+    return `<div class="bud-row"><div class="bud-name" title="${esc(k)}">${esc(k)} <span style="color:var(--muted);font-weight:400">(n=${v.n})</span></div>
+      <div class="bud-track"><div class="bud-fill${over?' over':''}" style="width:${(v.median_days||0)/max*100}%"><span>${v.median_days??'—'} дн.</span></div></div></div>`;
+  }).join('');
+}
+function renderMedianBreakdowns(){
+  const gm = Object.entries(MGMT.grade_median||{});
+  document.getElementById('gradeMedianChart').innerHTML = medianBar(gm, 30) +
+    `<div style="font-size:11px;color:var(--muted);margin-top:8px">Ориентир для C4/C5 — до 30 дней. Красным — превышение.</div>`;
+  const cm = Object.entries(MGMT.country_median||{}).sort((a,b)=>b[1].median_days-a[1].median_days);
+  document.getElementById('countryMedianChart').innerHTML = medianBar(cm, null);
+}
+function renderHmMedian(){
+  const hm = Object.entries(MGMT.hm_median||{});
+  document.getElementById('hmMedianChart').innerHTML = medianBar(hm, 45) ||
+    '<div style="color:var(--muted)">Недостаточно данных (нужно ≥2 наймов на заказчика)</div>';
+}
+function renderQualityDonut(){
+  const qc = MGMT.quality_counts || {};
+  const order = ['EE','ME','pending','left_before_review'];
+  document.getElementById('qualityDonutTotal').textContent = (qc['EE']||0)+(qc['ME']||0);
+  const R=58, C=2*Math.PI*R;
+  let off=0, circles='';
+  const allTotal = order.reduce((a,k)=>a+(qc[k]||0),0);
+  order.forEach(k=>{
+    const n=qc[k]||0; if(!n) return;
+    const len = n/allTotal*C;
+    circles+=`<circle cx="80" cy="80" r="${R}" stroke="${QUALITY_COLOR[k]}" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}"></circle>`;
+    off+=len;
+  });
+  document.getElementById('qualityDonutSvg').innerHTML=circles;
+  document.querySelectorAll('#qualityDonutSvg circle').forEach(c=>{
+    const full = c.getAttribute('stroke-dasharray');
+    c.setAttribute('stroke-dasharray', `0 ${C}`);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.setAttribute('stroke-dasharray', full); }));
+  });
+  document.getElementById('qualityDonutLegend').innerHTML = order.filter(k=>qc[k]).map(k=>
+    `<div class="dl-item"><span class="dl-dot" style="background:${QUALITY_COLOR[k]}"></span>${QUALITY_LABEL[k]}<span class="dl-n">${qc[k]}</span></div>`).join('');
+}
+function renderQualityByRecruiter(){
+  const qbr = MGMT.quality_by_recruiter || {};
+  const el = document.getElementById('qualityByRecruiter');
+  const names = Object.keys(qbr);
+  if(!names.length){ el.innerHTML='<div style="color:var(--muted)">Нет оценённых наймов</div>'; return; }
+  el.innerHTML = names.map(name=>{
+    const c = qbr[name]; const ee=c.EE||0, me=c.ME||0, total=ee+me;
+    return `<div class="bud-row"><div class="bud-name">${esc(name)}</div>
+      <div class="bud-track" style="display:flex">
+        ${ee?`<div style="width:${ee/total*100}%;background:${QUALITY_COLOR.EE};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${ee} Exceed</div>`:''}
+        ${me?`<div style="width:${me/total*100}%;background:${QUALITY_COLOR.ME};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${me} Meets</div>`:''}
+      </div></div>`;
+  }).join('');
+}
+function renderSourceCharts(){
+  hbars(document.getElementById('sourceExceed'), MGMT.source_for_exceed||{});
+  hbars(document.getElementById('sourceMeets'), MGMT.source_for_meets||{}, true);
+}
+function renderPnl(){
+  const p = MGMT.pnl || {};
+  document.getElementById('pnlNote').textContent = p.note || '';
+  const kpi = [
+    {c:'k1',label:'Общий доход (fee)',v:(p.fee_total/1e6).toFixed(2).replace('.',',')+' млн ₽',sub:`${p.positions_with_fee||0} позиций с fee`},
+    {c:'k2',label:'Средний fee за позицию',v:Math.round((p.avg_fee||0)/1000)+' тыс ₽',sub:'по позициям с известным fee'},
+    {c:'k3',label:'Позиций с fee из наймов',v:p.positions_with_fee||0,sub:`из ${DATA.clients.length} наймов клиентам`},
+  ];
+  document.getElementById('pnlKpi').innerHTML = kpi.map(k=>
+    `<div class="kpi ${k.c} visible"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.v}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+  const fmtRub = v => Math.round(v/1000)+' тыс ₽';
+  const feeBars = (el, obj) => {
+    const entries = Object.entries(obj);
+    const max = Math.max(1, ...entries.map(e=>e[1]));
+    el.innerHTML = entries.map(([k,v])=>`<div class="bud-row"><div class="bud-name" title="${esc(k)}">${esc(k)}</div>
+      <div class="bud-track"><div class="bud-fill" style="width:${v/max*100}%;background:linear-gradient(90deg,#3FAE7A,#8FDCB3)"><span>${fmtRub(v)}</span></div></div></div>`).join('') ||
+      '<div style="color:var(--muted)">Нет данных</div>';
+  };
+  feeBars(document.getElementById('feeByRecruiter'), p.fee_by_recruiter||{});
+  feeBars(document.getElementById('feeByClient'), p.fee_by_client||{});
+}
+function renderMgmt(){
+  const steps=[renderRecruiterBody, renderMassProf, renderMedianBreakdowns, renderHmMedian,
+    renderQualityDonut, renderQualityByRecruiter, renderSourceCharts, renderPnl];
+  steps.forEach(fn=>{ try{ fn(); }catch(e){ console.error(fn.name, e); } });
+}
+
+/* VIEW SWITCH */
+function renderAll(){
+  if(view==='mgmt'){
+    document.getElementById('paneHires').style.display='none';
+    document.getElementById('paneMgmt').style.display='block';
+    renderMgmt();
+    animateKpiNumbers(document.getElementById('paneMgmt'));
+    return;
+  }
+  document.getElementById('paneHires').style.display='block';
+  document.getElementById('paneMgmt').style.display='none';
+  [renderKPI,renderDonut,renderMonths,renderBars,renderHired,renderSearch].forEach(fn=>{
+    try{ fn(); }catch(e){ console.error(fn.name, e); }
+  });
+  document.querySelectorAll('.chart-card,.tbl-card,.kpi').forEach(el=>el.classList.add('visible'));
+  animateKpiNumbers(document.getElementById('paneHires'));
+}
+document.querySelectorAll('.vtab').forEach(el=>el.onclick=()=>{
+  if(el.classList.contains('on')) return;
+  view=el.dataset.view; hiredFilter='all'; searchFilter='all'; q='';
+  document.querySelectorAll('.vtab').forEach(v=>v.classList.toggle('on',v===el));
+  renderAll();
+});
+
+/* scrollbar */
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  document.getElementById('scrollbar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+});
+
+renderAll();
+</script>
+</body>
+</html>
